@@ -1,45 +1,72 @@
-import { useState } from 'react'
-import { Platform } from 'react-native'
+import { useState, useEffect } from 'react'
+import { Session } from '@supabase/supabase-js'
 import * as AppleAuthentication from 'expo-apple-authentication'
-// import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin'
 import { supabase } from '@/services/supabase'
 
-export function useAuth() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState<string | null>(null)
+// 🔧 MODE DEV : passer à false pour réactiver Supabase
+const DEV_BYPASS_AUTH = true
 
-  /*GoogleSignin.configure({
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-  })*/
+const DEV_SESSION: Session = {
+  user: {
+    id: 'dev-user-id',
+    email: 'dev@lebonsport.com',
+    app_metadata: {},
+    user_metadata: {},
+    aud: 'authenticated',
+    created_at: new Date().toISOString(),
+  },
+  access_token: 'dev-token',
+  refresh_token: 'dev-refresh-token',
+  expires_in: 9999,
+  expires_at: 9999999999,
+  token_type: 'bearer',
+} as unknown as Session
+
+export function useAuth() {
+  const [session, setSession] = useState<Session | null>(DEV_BYPASS_AUTH ? DEV_SESSION : null)
+  const [loading, setLoading] = useState(!DEV_BYPASS_AUTH)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (DEV_BYPASS_AUTH) return
+
+    const timeout = setTimeout(() => setLoading(false), 5000)
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(timeout)
+      setSession(session)
+      setLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      setLoading(false)
+    })
+
+    return () => {
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
+  }, [])
 
   const signUp = async (email: string, password: string) => {
-    setLoading(true)
     setError(null)
+    if (DEV_BYPASS_AUTH) { setSession(DEV_SESSION); return true }
     const { error } = await supabase.auth.signUp({ email, password })
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return false
-    }
-    setLoading(false)
-    return true 
+    if (error) { setError(error.message); return false }
+    return true
   }
 
   const signIn = async (email: string, password: string) => {
-    setLoading(true)
     setError(null)
+    if (DEV_BYPASS_AUTH) { setSession(DEV_SESSION); return true }
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return false
-    }
-    setLoading(false)
-    return true 
+    if (error) { setError(error.message); return false }
+    return true
   }
 
   const signIn_Apple = async () => {
+    if (DEV_BYPASS_AUTH) { setSession(DEV_SESSION); return true }
     try {
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
@@ -47,112 +74,46 @@ export function useAuth() {
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       })
-      // Sign in via Supabase Auth.
       if (credential.identityToken) {
-        const {error,data: { user },} = await supabase.auth.signInWithIdToken({provider: 'apple',token: credential.identityToken,})
-        console.log(JSON.stringify({ error, user }, null, 2))
-        if (error) {
-          setError(error.message)
-          return false
-        }
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: credential.identityToken,
+        })
+        if (error) { setError(error.message); return false }
       }
       if (credential.fullName) {
-        // Apple only provides the user's full name on the first sign-in
-        // Save it to user metadata if available
-        const nameParts = []
-        if (credential.fullName.givenName) nameParts.push(credential.fullName.givenName)
-        if (credential.fullName.middleName) nameParts.push(credential.fullName.middleName)
-        if (credential.fullName.familyName) nameParts.push(credential.fullName.familyName)
-        const fullName = nameParts.join(' ')
+        const nameParts = [
+          credential.fullName.givenName,
+          credential.fullName.middleName,
+          credential.fullName.familyName,
+        ].filter(Boolean)
         await supabase.auth.updateUser({
           data: {
-            full_name: fullName,
+            full_name: nameParts.join(' '),
             given_name: credential.fullName.givenName,
             family_name: credential.fullName.familyName,
           }
         })
-        // User is signed in.
       }
       return true
-
-    } catch (e : any) {
-      if (e.code === 'ERR_REQUEST_CANCELED') {
-        setError('Erreur lors de la connexion Apple')
-      } 
+    } catch (e: any) {
+      if (e.code === 'ERR_REQUEST_CANCELED') setError('Connexion Apple annulée')
       return false
     }
   }
 
- /* const signIn_Google = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      // Vérifie que Google Play Services est disponible (Android)
-      await GoogleSignin.hasPlayServices()
-
-      // Ouvre la popup Google native
-      const response = await GoogleSignin.signIn()
-
-      if (!response.data?.idToken) {
-        setError('Connexion Google échouée')
-        setLoading(false)
-        return false
-      }
-
-      // Connecte l'utilisateur dans Supabase avec le token Google
-      const { error } = await supabase.auth.signInWithIdToken({
-        provider: 'google',
-        token: response.data.idToken,
-      })
-
-      if (error) {
-        setError(error.message)
-        setLoading(false)
-        return false
-      }
-
-      setLoading(false)
-      return true
-
-    } catch (e: any) {
-      if (e.code === statusCodes.SIGN_IN_CANCELLED) {
-        // utilisateur a annulé — pas d'erreur à afficher
-      } else if (e.code === statusCodes.IN_PROGRESS) {
-        setError('Connexion déjà en cours')
-      } else if (e.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        setError('Google Play Services non disponible')
-      } else {
-        setError('Erreur lors de la connexion Google')
-      }
-      setLoading(false)
-      return false
-    }
-  } */
-
   const resetPassword = async (email: string) => {
-    setLoading(true)
     setError(null)
+    if (DEV_BYPASS_AUTH) return true
     const { error } = await supabase.auth.resetPasswordForEmail(email)
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return false
-    }
-    setLoading(false)
-    return true 
+    if (error) { setError(error.message); return false }
+    return true
   }
 
   const signOut = async () => {
-    setLoading(true)
+    if (DEV_BYPASS_AUTH) { setSession(null); return }
     await supabase.auth.signOut()
-    if (error) {
-      setLoading(false)
-      return false
-    }
-    setLoading(false)
-    return true 
   }
 
-return { signUp, signIn, signIn_Apple, /*signIn_Google, */signOut, resetPassword, loading, error }
+  return { session, loading, error, signUp, signIn, signIn_Apple, signOut, resetPassword }
 }
