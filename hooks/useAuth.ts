@@ -4,11 +4,11 @@ import * as AppleAuthentication from 'expo-apple-authentication'
 import { supabase } from '@/services/supabase'
 
 // 🔧 MODE DEV : passer à false pour réactiver Supabase
-const DEV_BYPASS_AUTH = true
+const DEV_BYPASS_AUTH = false
 
 const DEV_SESSION: Session = {
   user: {
-    id: 'dev-user-id',
+    id: '00000000-0000-0000-0000-000000000000',
     email: 'dev@lebonsport.com',
     app_metadata: {},
     user_metadata: {},
