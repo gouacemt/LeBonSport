@@ -292,7 +292,9 @@ export default function HomeScreen() {
                   onPress={() => router.push("/(tabs)/explore")}
                   activeOpacity={0.85}
                 >
-                  <Text style={styles.ctaBtnDarkText}>Explorer les annonces</Text>
+                  <Text style={styles.ctaBtnDarkText}>
+                    Explorer les annonces
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -465,6 +467,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 20,
     gap: 10,
+    justifyContent: "center",
   },
   sportChip: {
     backgroundColor: "#fff",
