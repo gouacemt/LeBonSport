@@ -1,6 +1,5 @@
-import { useState } from 'react'
-import { Platform } from 'react-native'
 import * as AppleAuthentication from 'expo-apple-authentication'
+import { useState } from 'react'
 // import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin'
 import { supabase } from '@/services/supabase'
 
@@ -50,7 +49,6 @@ export function useAuth() {
       // Sign in via Supabase Auth.
       if (credential.identityToken) {
         const {error,data: { user },} = await supabase.auth.signInWithIdToken({provider: 'apple',token: credential.identityToken,})
-        console.log(JSON.stringify({ error, user }, null, 2))
         if (error) {
           setError(error.message)
           return false
