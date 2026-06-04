@@ -1,5 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createClient } from '@supabase/supabase-js'
-import * as SecureStore from 'expo-secure-store'
 import { Platform } from 'react-native'
 
 const ExpoSecureStoreAdapter = {
@@ -8,7 +8,7 @@ const ExpoSecureStoreAdapter = {
       if (typeof window === 'undefined') return null
       return localStorage.getItem(key)
     }
-    return SecureStore.getItemAsync(key)
+    return AsyncStorage.getItem(key)
   },
   setItem: async (key: string, value: string) => {
     if (Platform.OS === 'web') {
@@ -16,7 +16,7 @@ const ExpoSecureStoreAdapter = {
       localStorage.setItem(key, value)
       return
     }
-    return SecureStore.setItemAsync(key, value)
+    return AsyncStorage.setItem(key, value)
   },
   removeItem: async (key: string) => {
     if (Platform.OS === 'web') {
@@ -24,9 +24,10 @@ const ExpoSecureStoreAdapter = {
       localStorage.removeItem(key)
       return
     }
-    return SecureStore.deleteItemAsync(key)
+    return AsyncStorage.removeItem(key)
   },
 }
+
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_KEY
