@@ -21,11 +21,11 @@ const BG          = '#F3F4F6'
 const WHITE       = '#FFFFFF'
 
 const TYPES = [
-  { id: 'club_recrute',   emoji: '🏛️', label: 'Je suis un club qui recrute' },
-  { id: 'equipe_joueurs', emoji: '👥', label: 'Notre équipe cherche des joueurs' },
-  { id: 'cherche_club',   emoji: '🔍', label: 'Je cherche un club' },
-  { id: 'cherche_equipe', emoji: '🤝', label: 'Je cherche une équipe' },
-  { id: 'partie_ouverte', emoji: '⚡', label: 'Je propose une partie ouverte' },
+  { id: 'club_recrute', label: 'Je suis un club qui recrute' },
+  { id: 'equipe_joueurs', label: 'Notre équipe cherche des joueurs' },
+  { id: 'cherche_club', label: 'Je cherche un club' },
+  { id: 'cherche_equipe', label: 'Je cherche une équipe' },
+  { id: 'partie_ouverte', label: 'Je propose une partie ouverte' },
 ]
 
 const SPORTS = [

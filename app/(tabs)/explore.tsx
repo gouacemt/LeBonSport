@@ -37,13 +37,6 @@ const TYPE_LABELS: Record<string, string> = {
   partie_ouverte: "Partie ouverte",
 };
 
-const TYPE_EMOJIS: Record<string, string> = {
-  club_recrute: "🏛️",
-  equipe_joueurs: "👥",
-  cherche_club: "🔍",
-  cherche_equipe: "🤝",
-  partie_ouverte: "⚡",
-};
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   club_recrute: { bg: "#EAF0FF", text: "#3B5BDB" },
@@ -93,7 +86,6 @@ function AnnonceCard({ annonce }: { annonce: Annonce }) {
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={[styles.typeBadge, { backgroundColor: typeColor.bg }]}>
-          <Text style={styles.typeBadgeEmoji}>{TYPE_EMOJIS[annonce.type]}</Text>
           <Text style={[styles.typeBadgeText, { color: typeColor.text }]}>
             {TYPE_LABELS[annonce.type] ?? annonce.type}
           </Text>

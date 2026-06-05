@@ -15,41 +15,26 @@ import {
 
 const { width } = Dimensions.get("window");
 
-const SPORTS = [
-  { emoji: "⚽", label: "Football" },
-  { emoji: "🎾", label: "Tennis" },
-  { emoji: "🏸", label: "Padel" },
-  { emoji: "🏀", label: "Basketball" },
-  { emoji: "🏃", label: "Running" },
-  { emoji: "🏐", label: "Volleyball" },
-  { emoji: "🏊", label: "Natation" },
-  { emoji: "🚴", label: "Cyclisme" },
-];
-
 const HOW_IT_WORKS = [
   {
-    icon: "🔍",
     title: "Trouvez facilement",
     desc: "Recherchez par sport, niveau et localisation",
     color: "#E8F5F0",
     iconColor: "#1A8C5B",
   },
   {
-    icon: "👥",
     title: "Complétez votre équipe",
     desc: "Il vous manque un joueur ? Publiez une annonce",
     color: "#EAF0FF",
     iconColor: "#3B5BDB",
   },
   {
-    icon: "🏆",
     title: "Rejoignez un club",
     desc: "Trouvez le club parfait près de chez vous",
     color: "#F5EAF5",
     iconColor: "#9B59B6",
   },
   {
-    icon: "⚡",
     title: "Parties spontanées",
     desc: "Organisez ou rejoignez une partie rapidement",
     color: "#FFF8E1",
@@ -204,7 +189,7 @@ export default function HomeScreen() {
               activeOpacity={0.85}
             >
               <Text style={styles.btnPrimaryText}>
-                🔍 Explorer les annonces
+                Explorer les annonces
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -213,7 +198,7 @@ export default function HomeScreen() {
               activeOpacity={0.85}
             >
               <Text style={styles.btnSecondaryText}>
-                👤 Publier une annonce
+                 Publier une annonce
               </Text>
             </TouchableOpacity>
           </Animated.View>
@@ -229,16 +214,6 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.sportsScroll}
           >
-            {SPORTS.map((sport) => (
-              <TouchableOpacity
-                key={sport.label}
-                style={styles.sportChip}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.sportEmoji}>{sport.emoji}</Text>
-                <Text style={styles.sportLabel}>{sport.label}</Text>
-              </TouchableOpacity>
-            ))}
           </ScrollView>
         </Animated.View>
 
@@ -339,9 +314,6 @@ function HowCard({
         onPressOut={onPressOut}
         activeOpacity={1}
       >
-        <View style={[styles.howIconCircle, { backgroundColor: item.color }]}>
-          <Text style={styles.howIcon}>{item.icon}</Text>
-        </View>
         <Text style={styles.howTitle}>{item.title}</Text>
         <Text style={styles.howDesc}>{item.desc}</Text>
       </TouchableOpacity>
