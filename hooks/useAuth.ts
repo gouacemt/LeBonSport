@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 import { useState, useEffect } from 'react'
 import { Session } from '@supabase/supabase-js'
 import * as AppleAuthentication from 'expo-apple-authentication'
+=======
+import * as AppleAuthentication from 'expo-apple-authentication'
+import { useState } from 'react'
+// import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin'
+>>>>>>> origin/Auth_ARS
 import { supabase } from '@/services/supabase'
 
 // 🔧 MODE DEV : passer à false pour réactiver Supabase
@@ -75,11 +81,19 @@ export function useAuth() {
         ],
       })
       if (credential.identityToken) {
+<<<<<<< HEAD
         const { error } = await supabase.auth.signInWithIdToken({
           provider: 'apple',
           token: credential.identityToken,
         })
         if (error) { setError(error.message); return false }
+=======
+        const {error,data: { user },} = await supabase.auth.signInWithIdToken({provider: 'apple',token: credential.identityToken,})
+        if (error) {
+          setError(error.message)
+          return false
+        }
+>>>>>>> origin/Auth_ARS
       }
       if (credential.fullName) {
         const nameParts = [
