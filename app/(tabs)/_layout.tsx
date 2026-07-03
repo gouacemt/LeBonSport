@@ -26,6 +26,13 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="map"
+          options={{
+            title: 'Carte',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="map.fill" color={color} />,
+          }}
+        />
+        <Tabs.Screen
           name="explore"
           options={{
             title: 'Explore',
@@ -43,10 +50,3 @@ export default function TabLayout() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container:  { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title:      { fontSize: 24, fontWeight: 'bold', marginBottom: 40 },
-  button:     { backgroundColor: '#E24B4A', borderRadius: 10, padding: 16, width: '80%', alignItems: 'center' },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-})
