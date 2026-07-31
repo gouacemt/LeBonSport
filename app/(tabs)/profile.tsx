@@ -85,6 +85,11 @@ export default function ProfileScreen() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Mon Profil</Text>
 
+          {/* Bio */}
+          {profile && profile.type && (
+            <Text style={styles.type}>{profile.type}</Text>
+          )}
+
           {/* Avatar */}
           <View style={styles.avatarContainer}>
             {profile && profile.avatar_url ? (
@@ -180,6 +185,9 @@ const styles = StyleSheet.create({
 
   header:            {paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 16 : 60, paddingBottom: 32,paddingHorizontal: 24, alignItems: 'center'},
   headerTitle:       {fontSize: 16, fontWeight: '600', color: 'rgba(255,255,255,0.9)', alignSelf: 'flex-start', marginBottom: 20 },
+
+  // Type d'utilisateur
+  type:              {fontSize: 22, fontWeight: 'bold', color: '#fff', marginBottom: 12},
 
   // Avatar
   avatarContainer:   {marginBottom: 14 },
