@@ -6,10 +6,11 @@ type ProfileForm = {
   prenom:    string
   bio:       string
   age:       string
+  type:      string
 }
 
 export function useEditProfile() {
-  const [form, setForm]       = useState<ProfileForm>({nom: '', prenom: '', bio: '', age: ''})
+  const [form, setForm]       = useState<ProfileForm>({nom: '', prenom: '', bio: '', age: '', type: ''})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving]   = useState(false)
   const [error, setError]     = useState<string | null>(null)
@@ -30,13 +31,15 @@ export function useEditProfile() {
       return false
     }
 
-    const {data, error} = await supabase.from('profiles').select('nom, prenom, bio, age').eq('id', user.id).single()
+    const {data, error} = await supabase.from('profiles').select('nom, prenom, bio, age, is_sportif, is_coach, is_club').eq('id', user.id).single()
 
     if (error) {
       setError(error.message)
       setLoading(false)
       return false
     }
+
+    const { type_profil } = data.is_sportif !== null ? data.is_sportif : data.is_coach !== null ? data.is_coach : data.is_club !== null ? data.is_club :' '
 
     if (data !== null) {
       // Pré-remplit le formulaire avec les données existantes
@@ -45,6 +48,7 @@ export function useEditProfile() {
         prenom: data.prenom !== null ? data.prenom : '',
         bio:    data.bio    !== null ? data.bio    : '',
         age:    data.age    !== null ? data.age.toString() : '',
+        type:   type_profil
       })
     }
 
@@ -106,6 +110,7 @@ export function useEditProfile() {
         prenom:     form.prenom !== '' ? form.prenom : null,
         bio:        form.bio    !== '' ? form.bio    : null,
         age:        form.age    !== '' ? Number(form.age) : null,
+        type:       form.type   !== '' ? form.type : null,
         updated_at: new Date().toISOString(),
       }).select()
 

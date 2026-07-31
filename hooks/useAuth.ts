@@ -12,14 +12,44 @@ export function useAuth() {
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
   })*/
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, type: 'sportif' | 'coach' | 'club') => {
     setLoading(true)
     setError(null)
-    const { error } = await supabase.auth.signUp({ email, password })
+
+    // Validation email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError('Adresse email invalide')
+      setLoading(false)
+      return false
+    }
+
+    // Validation mot de passe
+    if (password.length < 6) {
+      setError('Le mot de passe doit contenir au moins 6 caractères')
+      setLoading(false)
+      return false
+    }
+
+    const { error, data } = await supabase.auth.signUp({ email, password })
     if (error) {
       setError(error.message)
       setLoading(false)
       return false
+    }
+    if (data.user) {
+    await supabase
+      .from('profiles')
+      .upsert({
+        id:          data.user.id,
+        is_sportif:  type === 'sportif',
+        is_coach:    type === 'coach',
+        is_club:     type === 'club',
+      })
+
+    await supabase
+      .from('notification_settings')
+      .upsert({ user_id: data.user.id })
     }
     setLoading(false)
     return true 

@@ -8,6 +8,7 @@ type Profile = {
   bio: string | null
   age: number | null
   avatar_url: string | null
+  type : string | null
 }
 
 type Sport = {
@@ -54,7 +55,7 @@ export function useProfile() {
 
    // Charge les sports favoris avec les détails
   const {data: sportsData, error: sportsError} = await supabase.from('user_sports').select('sport_id, sports(id, nom, emoji)').eq('user_id', user.id)
-
+  
   if (sportsError === null && sportsData !== null) {
     const listeSports: Sport[] = []
 
