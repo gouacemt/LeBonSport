@@ -12,7 +12,7 @@ export default function TypeProfilScreen() {
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#E24B4A" />
+      <StatusBar barStyle="light-content" backgroundColor="#16A06A" />
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -79,7 +79,7 @@ export default function TypeProfilScreen() {
 }
 
 const styles = StyleSheet.create({
-  root:            {flex: 1, backgroundColor: '#E24B4A'},
+  root:            {flex: 1, backgroundColor: '#16A06A'},
   keyboardView:    {flex: 1},
   scrollContent:   {flexGrow: 1, justifyContent: 'flex-end'},
   bottomSheet:     {backgroundColor: '#fff', borderTopLeftRadius: 36, borderTopRightRadius: 36, padding: 28, paddingBottom: Platform.OS === 'ios' ? 48 : 32},
@@ -90,8 +90,8 @@ const styles = StyleSheet.create({
   cardTexts:       {flex: 1},
   cardLabel:       {fontSize: 16, fontWeight: 'bold', color: '#1a1a1a', marginBottom: 2},
   cardDescription: {fontSize: 12, color: '#6B7280'},
-  cardArrow:       {fontSize: 22, color: '#E24B4A'},
+  cardArrow:       {fontSize: 22, color: '#16A06A'},
   registerRow:     {flexDirection: 'row', justifyContent: 'center', marginTop: 16},
   registerText:    {fontSize: 14, color: '#6B7280'},
-  registerLink:    {fontSize: 14, color: '#E24B4A', fontWeight: '600'},
+  registerLink:    {fontSize: 14, color: '#16A06A', fontWeight: '600'},
 })

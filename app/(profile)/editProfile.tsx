@@ -1,10 +1,10 @@
 import { useEditProfile } from '@/hooks/useEditProfile'
 import { useSports } from '@/hooks/useSports'
 import { router } from 'expo-router'
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 
 export default function EditProfileScreen() {
-  const { form, loading, saving, error, updateField, saveProfile } = useEditProfile()
+  const { form, loading, saving, error, updateField, saveProfile, avatarUrl, uploadingAvatar, pickAndUploadAvatar } = useEditProfile()
   const { sports, selected, SportChoice, saveSports, loadUserSports } = useSports()
 
   const handleSave = async () => {
@@ -21,14 +21,14 @@ export default function EditProfileScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E24B4A" />
+        <ActivityIndicator size="large" color="#16A06A" />
       </View>
     )
   }
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#E24B4A" />
+      <StatusBar barStyle="light-content" backgroundColor="#16A06A" />
 
       <KeyboardAvoidingView
         style={styles.keyboardView}
@@ -54,12 +54,19 @@ export default function EditProfileScreen() {
 
             {/* Avatar */}
             <View style={styles.avatarSection}>
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarEmoji}>👤</Text>
-              </View>
-              <TouchableOpacity>
-                <Text style={styles.avatarChange}>Changer la photo</Text>
-              </TouchableOpacity>
+              {avatarUrl ? (
+                <Image source={{ uri: avatarUrl }} style={styles.avatarImage} /> ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Text style={styles.avatarEmoji}>👤</Text>
+                </View>
+              )}
+              <TouchableOpacity onPress={pickAndUploadAvatar} disabled={uploadingAvatar}>
+                {uploadingAvatar ? (
+                  <ActivityIndicator color="#16A06A" />
+                ) : (
+                  <Text style={styles.avatarChange}>Changer la photo</Text>
+                )}
+                  </TouchableOpacity>
             </View>
 
             {/* Prénom */}
@@ -149,7 +156,7 @@ export default function EditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  root:              {flex: 1, backgroundColor: '#E24B4A'},
+  root:              {flex: 1, backgroundColor: '#16A06A'},
   loadingContainer:  {flex: 1, justifyContent: 'center', alignItems: 'center'},
   keyboardView:      {flex: 1},
   header:            {paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 16 : 60, paddingBottom: 32, paddingHorizontal: 24},
@@ -162,7 +169,8 @@ const styles = StyleSheet.create({
   avatarSection:     {alignItems: 'center', marginBottom: 28},
   avatarPlaceholder: {width: 90, height: 90, borderRadius: 45, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center', marginBottom: 10},
   avatarEmoji:       {fontSize: 36},
-  avatarChange:      {fontSize: 14, color: '#E24B4A', fontWeight: '500'},
+  avatarChange:      {fontSize: 14, color: '#16A06A', fontWeight: '500'},
+  avatarImage:       {width: 90, height: 90, borderRadius: 45, marginBottom: 10},
 
   // Champs
   label:             {fontSize: 13, fontWeight: '500', color: '#6B7280', marginBottom: 6 },
@@ -173,13 +181,13 @@ const styles = StyleSheet.create({
   sectionTitle:      {fontSize: 15, fontWeight: '600', color: '#1a1a1a', marginBottom: 14, marginTop: 4},
   sportsGrid:        {flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24},
   sportCard:         {width: '30%', aspectRatio: 1, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FAFAFA'},
-  sportCardSelected: {borderWidth: 2, borderColor: '#E24B4A', backgroundColor: '#FEE2E2'},
+  sportCardSelected: {borderWidth: 2, borderColor: '#16A06A', backgroundColor: '#FEE2E2'},
   sportEmoji:        {fontSize: 24, marginBottom: 4},
   sportNom:          {fontSize: 10, color: '#6B7280', textAlign: 'center'},
   sportNomSelected:  {color: '#991B1B', fontWeight: '600'},
 
   // Bouton
-  button:            {backgroundColor: '#E24B4A', borderRadius: 12, padding: 16, alignItems: 'center'},
+  button:            {backgroundColor: '#16A06A', borderRadius: 12, padding: 16, alignItems: 'center'},
   buttonText:        {color: '#fff', fontWeight: '600', fontSize: 16},
   error:             {color: '#991B1B', backgroundColor: '#FEE2E2', padding: 10, borderRadius: 8, marginBottom: 16, fontSize: 14},
 })
