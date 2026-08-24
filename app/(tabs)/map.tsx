@@ -35,7 +35,7 @@ export default function MapScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E24B4A" />
+        <ActivityIndicator size="large" color="#16A06A" />
         <Text style={styles.loadingText}>Récupération de ta position...</Text>
       </View>
     )
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   root:                  { flex: 1, backgroundColor: '#fff' },
   loadingContainer:      { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
   loadingText:           { fontSize: 14, color: '#6B7280' },
-  errorText:             { fontSize: 14, color: '#E24B4A', textAlign: 'center', padding: 24 },
+  errorText:             { fontSize: 14, color: '#16A06A', textAlign: 'center', padding: 24 },
 
   container:             { flex: 1, flexDirection: 'row' },
 
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   filterLabel:           { fontSize: 11, fontWeight: '600', color: '#9CA3AF', marginBottom: 8 },
   rayonBadges:           { flexDirection: 'row', gap: 6 },
   rayonBadge:            { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#fff' },
-  rayonBadgeActive:      { backgroundColor: '#E24B4A', borderColor: '#E24B4A' },
+  rayonBadgeActive:      { backgroundColor: '#16A06A', borderColor: '#16A06A' },
   rayonBadgeText:        { fontSize: 12, color: '#6B7280' },
   rayonBadgeTextActive:  { color: '#fff', fontWeight: '600' },
 
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   annonceSport:          { fontSize: 11, color: '#6B7280' },
   annonceFooter:         { flexDirection: 'row', justifyContent: 'space-between' },
   annonceVille:          { fontSize: 11, color: '#9CA3AF' },
-  annoncePlaces:         { fontSize: 11, color: '#E24B4A', fontWeight: '500' },
+  annoncePlaces:         { fontSize: 11, color: '#16A06A', fontWeight: '500' },
 
   // Vide
   emptyContainer:        { padding: 24, alignItems: 'center', gap: 8 },
@@ -244,8 +244,8 @@ const styles = StyleSheet.create({
   map:                   { flex: 1 },
 
   // Marqueurs
-  marker:                { width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', borderWidth: 2, borderColor: '#E24B4A', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 4 },
-  markerSelected:        { backgroundColor: '#E24B4A', borderColor: '#E24B4A' },
+  marker:                { width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', borderWidth: 2, borderColor: '#16A06A', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 4 },
+  markerSelected:        { backgroundColor: '#16A06A', borderColor: '#16A06A' },
   markerEmoji:           { fontSize: 16 },
 
   // Détail annonce
@@ -253,9 +253,9 @@ const styles = StyleSheet.create({
   detailClose:           { position: 'absolute', top: 12, right: 12, width: 24, height: 24, borderRadius: 12, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' },
   detailCloseText:       { fontSize: 12, color: '#6B7280' },
   detailTitre:           { fontSize: 16, fontWeight: 'bold', color: '#1a1a1a', marginBottom: 4, paddingRight: 24 },
-  detailSport:           { fontSize: 13, color: '#E24B4A', fontWeight: '500', marginBottom: 6 },
+  detailSport:           { fontSize: 13, color: '#16A06A', fontWeight: '500', marginBottom: 6 },
   detailDescription:     { fontSize: 13, color: '#6B7280', lineHeight: 18, marginBottom: 8 },
   detailFooter:          { flexDirection: 'row', justifyContent: 'space-between' },
   detailVille:           { fontSize: 12, color: '#9CA3AF' },
-  detailPlaces:          { fontSize: 12, color: '#E24B4A', fontWeight: '500' },
+  detailPlaces:          { fontSize: 12, color: '#16A06A', fontWeight: '500' },
 })

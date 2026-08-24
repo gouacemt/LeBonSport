@@ -44,14 +44,14 @@ export default function NotificationsScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E24B4A" />
+        <ActivityIndicator size="large" color="#16A06A" />
       </View>
     )
   }
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#E24B4A" />
+      <StatusBar barStyle="light-content" backgroundColor="#16A06A" />
 
       {/* Header rouge */}
       <View style={styles.header}>
@@ -93,7 +93,7 @@ export default function NotificationsScreen() {
                   value={settings[item.champ]}
                   onValueChange={function() { FieldSetting(item.champ) }}
                   trackColor={{ false: '#E5E7EB', true: '#FCA5A5' }}
-                  thumbColor={settings[item.champ] ? '#E24B4A' : '#9CA3AF'}
+                  thumbColor={settings[item.champ] ? '#16A06A' : '#9CA3AF'}
                 />
               </View>
             )
@@ -106,7 +106,7 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root:             {flex: 1, backgroundColor: '#E24B4A'},
+  root:             {flex: 1, backgroundColor: '#16A06A'},
   loadingContainer: {flex: 1, justifyContent: 'center', alignItems: 'center'},
 
   // Header rouge

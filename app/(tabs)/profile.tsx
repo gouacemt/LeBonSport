@@ -68,14 +68,14 @@ export default function ProfileScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E24B4A" />
+        <ActivityIndicator size="large" color="#16A06A" />
       </View>
     )
   }
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#E24B4A" />
+      <StatusBar barStyle="light-content" backgroundColor="#16A06A" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -180,7 +180,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  root:              {flex: 1, backgroundColor: '#E24B4A' },
+  root:              {flex: 1, backgroundColor: '#16A06A' },
   loadingContainer:  {flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
 
   header:            {paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 16 : 60, paddingBottom: 32,paddingHorizontal: 24, alignItems: 'center'},
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   menuItemLeft:      {flexDirection: 'row', alignItems: 'center', gap: 12},
   menuItemEmoji:     {fontSize: 20 },
   menuItemLabel:     {fontSize: 15, color: '#1a1a1a'},
-  menuItemDanger:    {fontSize: 15, color: '#E24B4A', fontWeight: '600'},
+  menuItemDanger:    {fontSize: 15, color: '#16A06A', fontWeight: '600'},
   menuItemArrow:     {fontSize: 20, color: '#9CA3AF'},
 
   // Erreur
