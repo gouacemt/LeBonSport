@@ -1,4 +1,5 @@
 import { supabase } from '@/services/supabase'
+import * as ImagePicker from 'expo-image-picker'
 import { useEffect, useState } from 'react'
 
 type ProfileForm = {
@@ -6,13 +7,16 @@ type ProfileForm = {
   prenom:    string
   bio:       string
   age:       string
+  type:      string
 }
 
 export function useEditProfile() {
-  const [form, setForm]       = useState<ProfileForm>({nom: '', prenom: '', bio: '', age: ''})
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving]   = useState(false)
-  const [error, setError]     = useState<string | null>(null)
+  const [form, setForm]                       = useState<ProfileForm>({nom: '', prenom: '', bio: '', age: '', type: ''})
+  const [loading, setLoading]                 = useState(true)
+  const [saving, setSaving]                   = useState(false)
+  const [error, setError]                     = useState<string | null>(null)
+  const [avatarUrl, setAvatarUrl]             = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
   // ─── Charger le profil existant au démarrage ────────────────
   useEffect(() => {loadProfile()}, [])
@@ -30,13 +34,15 @@ export function useEditProfile() {
       return false
     }
 
-    const {data, error} = await supabase.from('profiles').select('nom, prenom, bio, age').eq('id', user.id).single()
+    const {data, error} = await supabase.from('profiles').select('nom, prenom, bio, age, avatar_url, is_sportif, is_coach, is_club').eq('id', user.id).single()
 
     if (error) {
       setError(error.message)
       setLoading(false)
       return false
     }
+
+    const { type_profil } = data.is_sportif !== null ? data.is_sportif : data.is_coach !== null ? data.is_coach : data.is_club !== null ? data.is_club :' '
 
     if (data !== null) {
       // Pré-remplit le formulaire avec les données existantes
@@ -45,7 +51,9 @@ export function useEditProfile() {
         prenom: data.prenom !== null ? data.prenom : '',
         bio:    data.bio    !== null ? data.bio    : '',
         age:    data.age    !== null ? data.age.toString() : '',
+        type:   type_profil,
       })
+      setAvatarUrl(data.avatar_url !== null ? data.avatar_url : null)
     }
 
     setLoading(false)
@@ -57,6 +65,75 @@ export function useEditProfile() {
     const nouveauForm = { ...form }
     nouveauForm[champ] = valeur
     setForm(nouveauForm)
+  }
+
+   // ─── Changer la photo de profil ─────────────────────────────
+  const pickAndUploadAvatar = async () => {
+    setError(null)
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (!permission.granted) {
+      setError('L\'accès à tes photos est nécessaire pour changer ta photo de profil')
+      return false
+    }
+
+    const resultat = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    })
+
+    if (resultat.canceled || resultat.assets.length === 0) {
+      return false
+    }
+
+    const image = resultat.assets[0]
+
+    setUploadingAvatar(true)
+
+    const reponse = await supabase.auth.getUser()
+    const user = reponse.data.user
+
+    if (user === null) {
+      setError('Utilisateur non connecté')
+      setUploadingAvatar(false)
+      return false
+    }
+
+    const extension  = image.uri.split('.').pop()?.toLowerCase() || 'jpg'
+    const contentType = image.mimeType !== undefined ? image.mimeType : `image/${extension}`
+    const chemin = `${user.id}/avatar-${Date.now()}.${extension}`
+
+    const fichier      = await fetch(image.uri)
+    const arrayBuffer  = await fichier.arrayBuffer()
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(chemin, arrayBuffer, { contentType, upsert: true })
+
+    if (uploadError) {
+      setError(uploadError.message)
+      setUploadingAvatar(false)
+      return false
+    }
+
+    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(chemin)
+    const nouvelleUrl = urlData.publicUrl
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ avatar_url: nouvelleUrl, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
+
+    if (updateError) {
+      setError(updateError.message)
+      setUploadingAvatar(false)
+      return false
+    }
+
+    setAvatarUrl(nouvelleUrl)
+    setUploadingAvatar(false)
+    return true
   }
 
   // ─── Valider le formulaire ──────────────────────────────────
@@ -106,6 +183,7 @@ export function useEditProfile() {
         prenom:     form.prenom !== '' ? form.prenom : null,
         bio:        form.bio    !== '' ? form.bio    : null,
         age:        form.age    !== '' ? Number(form.age) : null,
+        type:       form.type   !== '' ? form.type : null,
         updated_at: new Date().toISOString(),
       }).select()
 
@@ -129,5 +207,8 @@ console.log('Upsert résultat:', { error, data })
     error,
     updateField,
     saveProfile,
+    avatarUrl,
+    uploadingAvatar,
+    pickAndUploadAvatar
   }
 }

@@ -45,7 +45,13 @@
         }
       ],
       "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "L'application a besoin d'accéder à tes photos pour changer ta photo de profil."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
