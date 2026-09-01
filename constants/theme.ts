@@ -1,41 +1,68 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Design tokens for LeBonSport — single source of truth for color, spacing and radius.
+ * Real screens should consume these via hooks/useTheme.ts, not hardcode hex values.
  */
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const palette = {
+  green50: '#F0FBF5',
+  green100: '#E8F5F0',
+  green500: '#16A06A',
+  green600: '#0D8A52',
+  green700: '#0D7A4F',
+  greenGradientA: '#2ECC8F',
+  greenGradientB: '#1AAD6E',
 
+  neutral0: '#FFFFFF',
+  neutral50: '#F8FAF9',
+  neutral100: '#F3F4F6',
+  neutral200: '#E8EDE9',
+  neutral300: '#E5E7EB',
+  neutral500: '#9CA3AF',
+  neutral600: '#6B7280',
+  neutral900: '#0F1F17',
+
+  error: '#991B1B',
+  errorBg: '#FEE2E2',
+  warning: '#F39C12',
+};
+
+// Palette unique vert + blanc — pas de mode sombre, pas de noir.
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    background: palette.neutral50,
+    surface: palette.neutral0,
+    surfaceAlt: palette.neutral100,
+    border: palette.neutral300,
+    text: palette.neutral900,
+    textMuted: palette.neutral600,
+    textSubtle: palette.neutral500,
+    primary: palette.green500,
+    primaryDark: palette.green700,
+    primaryLight: palette.green100,
+    gradientStart: palette.greenGradientA,
+    gradientMid: palette.greenGradientB,
+    gradientEnd: palette.green600,
+    tint: palette.green500,
+    icon: palette.neutral600,
+    tabIconDefault: palette.neutral600,
+    tabIconSelected: palette.green500,
+    success: palette.green500,
+    error: palette.error,
+    errorBg: palette.errorBg,
+    warning: palette.warning,
   },
 };
 
+export const Spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 };
+export const Radius = { sm: 8, md: 12, lg: 16, xl: 20, pill: 999 };
+
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {

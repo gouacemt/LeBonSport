@@ -38,7 +38,7 @@ if (!supabaseUrl || !supabaseKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
-    storage: ExpoSecureStoreAdapter,  // ← SecureStore au lieu de AsyncStorage
+    storage: ExpoSecureStoreAdapter, 
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,

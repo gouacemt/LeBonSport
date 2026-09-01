@@ -1,0 +1,24 @@
+[33mcommit a12e03a511d4b382d7428c92b362be0ea835a67f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev/idriss[m[33m)[m
+Merge: 470c4f8 dbb99d0
+Author: Gouacem <gouacemt@gmail.com>
+Date:   Fri Jun 5 10:14:29 2026 +0200
+
+    Merge remote-tracking branch 'origin/Auth_ARS' into dev/idriss
+
+ app.json                        |   3 [32m+[m[31m-[m
+ app/(auth)/_layout.tsx          |  11 [31m---[m
+ app/(auth)/register.tsx         |   7 [31m--[m
+ app/(onboarding)/sports.tsx     | 132 [32m+++++++++++++++++++++++++[m
+ app/(profile)/editProfile.tsx   | 185 [32m++++++++++++++++++++++++++++++++++[m
+ app/(profile)/notifications.tsx | 134 [32m+++++++++++++++++++++++++[m
+ app/(tabs)/_layout.tsx          |  52 [32m++++++++++[m
+ app/(tabs)/profile.tsx          | 214 [32m++++++++++++++++++++++++++++++++++++++++[m
+ hooks/useAuth.ts                |  14 [32m+++[m
+ hooks/useEditProfile.ts         | 133 [32m+++++++++++++++++++++++++[m
+ hooks/useNotifications.ts       |  97 [32m++++++++++++++++++[m
+ hooks/useProfile.ts             | 126 [32m+++++++++++++++++++++++[m
+ hooks/useSports.ts              | 125 [32m+++++++++++++++++++++++[m
+ package-lock.json               |  10 [32m++[m
+ package.json                    |   1 [32m+[m
+ services/supabase.ts            |  48 [32m++++++++[m[31m-[m
+ 16 files changed, 1272 insertions(+), 20 deletions(-)

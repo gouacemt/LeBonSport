@@ -1,4 +1,18 @@
 import Header from "@/components/Header";
+import { Card } from "@/components/ui/Card";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { PressableScale } from "@/components/ui/PressableScale";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { Skeleton, SkeletonRow } from "@/components/ui/Skeleton";
+import { Spacing } from "@/constants/theme";
+import { getSportIcon } from "@/constants/sportIcons";
+import { useNearbyAthletes } from "@/hooks/useNearbyAthletes";
+import { usePlatformStats } from "@/hooks/usePlatformStats";
+import { usePopularClubs } from "@/hooks/usePopularClubs";
+import { useRecommendations } from "@/hooks/useRecommendations";
+import { useSports } from "@/hooks/useSports";
+import { useTestimonials } from "@/hooks/useTestimonials";
+import { useUpcomingEvents } from "@/hooks/useUpcomingEvents";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
@@ -49,8 +63,15 @@ function useAnimatedValue(initialValue: number) {
 export default function HomeScreen() {
   const router = useRouter();
 
-  // ← NOUVEAU : scrollY pour le Header
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  const { sports } = useSports();
+  const platformStats = usePlatformStats();
+  const recommendations = useRecommendations();
+  const popularClubs = usePopularClubs();
+  const upcomingEvents = useUpcomingEvents();
+  const nearbyAthletes = useNearbyAthletes();
+  const testimonials = useTestimonials();
 
   const heroOpacity = useAnimatedValue(0);
   const heroTranslate = useAnimatedValue(30);
@@ -123,12 +144,9 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    // ← NOUVEAU : View racine pour superposer Header + ScrollView
     <View style={styles.root}>
-      {/* Header flottant qui se grise au scroll */}
       <Header scrollY={scrollY} />
 
-      {/* ← ScrollView → Animated.ScrollView pour tracker le scroll */}
       <Animated.ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
@@ -138,14 +156,12 @@ export default function HomeScreen() {
         )}
         scrollEventThrottle={16}
       >
-        {/*Hero*/}
         <LinearGradient
           colors={["#2ECC8F", "#1AAD6E", "#0D8A52"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.hero}
         >
-          {/*Badge*/}
           <Animated.View
             style={[
               styles.badge,
@@ -160,7 +176,6 @@ export default function HomeScreen() {
             </Text>
           </Animated.View>
 
-          {/*Headline*/}
           <Animated.View
             style={{
               opacity: heroOpacity,
@@ -176,7 +191,6 @@ export default function HomeScreen() {
             </Text>
           </Animated.View>
 
-          {/*Cta buttons*/}
           <Animated.View
             style={[
               styles.heroBtns,
@@ -203,19 +217,207 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </Animated.View>
 
-          {/* Wave */}
           <View style={styles.wave} />
         </LinearGradient>
 
-        {/*Sports Catégories*/}
-        <Animated.View style={{ opacity: sportsOpacity }}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.sportsScroll}
-          >
-          </ScrollView>
-        </Animated.View>
+        {sports.length > 0 && (
+          <Animated.View style={{ opacity: sportsOpacity }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.sportsScroll}
+            >
+              {sports.map((sport) => (
+                <PressableScale
+                  key={sport.id}
+                  style={styles.sportChip}
+                  onPress={() => router.push(`/(tabs)/explore?sport=${encodeURIComponent(sport.nom)}` as any)}
+                >
+                  <IconSymbol name={getSportIcon(sport.nom)} size={26} color="#16A06A" />
+                  <Text style={styles.sportLabel}>{sport.nom}</Text>
+                </PressableScale>
+              ))}
+            </ScrollView>
+          </Animated.View>
+        )}
+
+        <View style={styles.statsBanner}>
+          {platformStats.loading ? (
+            <>
+              <Skeleton width={70} height={32} />
+              <Skeleton width={70} height={32} />
+              <Skeleton width={70} height={32} />
+            </>
+          ) : (
+            <>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{platformStats.annoncesCount}</Text>
+                <Text style={styles.statLabel}>Annonces</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{platformStats.membersCount}</Text>
+                <Text style={styles.statLabel}>Membres</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{sports.length}</Text>
+                <Text style={styles.statLabel}>Sports</Text>
+              </View>
+            </>
+          )}
+        </View>
+
+        {(recommendations.loading || recommendations.data.length > 0) && (
+          <View style={styles.section}>
+            <SectionHeader
+              title="Recommandé pour vous"
+              subtitle="Selon les sports que vous pratiquez"
+              ctaLabel="Voir tout"
+              onCta={() => router.push("/(tabs)/explore")}
+            />
+            {recommendations.loading ? (
+              <View style={{ gap: Spacing.sm }}>
+                <SkeletonRow /><SkeletonRow /><SkeletonRow />
+              </View>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.md }}>
+                {recommendations.data.map((a) => (
+                  <PressableScale key={a.id} onPress={() => router.push(`/annonce/${a.id}` as any)}>
+                    <Card style={styles.teaserCard}>
+                      <View style={styles.iconCircle}>
+                        <IconSymbol name={getSportIcon(a.sport)} size={22} color="#0D8A52" />
+                      </View>
+                      <Text style={styles.teaserTitle} numberOfLines={2}>{a.titre}</Text>
+                      <View style={styles.metaRow}>
+                        <View style={styles.metaChip}>
+                          <Text style={styles.metaChipText}>{a.sport}</Text>
+                        </View>
+                        <View style={styles.inlineIconText}>
+                          <IconSymbol name="mappin.and.ellipse" size={12} color="#5A7366" />
+                          <Text style={styles.teaserSub}>{a.ville}</Text>
+                        </View>
+                      </View>
+                    </Card>
+                  </PressableScale>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        )}
+
+        <View style={styles.section}>
+          <SectionHeader title="Clubs populaires" subtitle="Les clubs qui recrutent près de chez vous" />
+          {popularClubs.loading ? (
+            <View style={{ gap: Spacing.sm }}><SkeletonRow /><SkeletonRow /></View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.md }}>
+              {popularClubs.data.map((club) => (
+                <PressableScale key={club.id} onPress={() => router.push("/(tabs)/explore")}>
+                  <Card style={styles.teaserCard}>
+                    <View style={styles.iconCircle}>
+                      <IconSymbol name={club.icon} size={22} color="#0D8A52" />
+                    </View>
+                    <Text style={styles.teaserTitle} numberOfLines={1}>{club.nom}</Text>
+                    <View style={styles.inlineIconText}>
+                      <IconSymbol name="mappin.and.ellipse" size={12} color="#5A7366" />
+                      <Text style={styles.teaserSub}>{club.ville}</Text>
+                    </View>
+                    <View style={styles.metaRow}>
+                      <View style={styles.metaChip}>
+                        <Text style={styles.metaChipText}>{club.membres} membres</Text>
+                      </View>
+                    </View>
+                  </Card>
+                </PressableScale>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <SectionHeader title="Événements à venir" subtitle="Compétitions et rencontres organisées" />
+          {upcomingEvents.loading ? (
+            <View style={{ gap: Spacing.sm }}><SkeletonRow /><SkeletonRow /></View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.md }}>
+              {upcomingEvents.data.map((event) => (
+                <PressableScale key={event.id} onPress={() => router.push("/(tabs)/explore")}>
+                  <Card style={styles.teaserCard}>
+                    <View style={styles.iconCircle}>
+                      <IconSymbol name={event.icon} size={22} color="#0D8A52" />
+                    </View>
+                    <Text style={styles.teaserTitle} numberOfLines={2}>{event.titre}</Text>
+                    <View style={styles.inlineIconText}>
+                      <IconSymbol name="mappin.and.ellipse" size={12} color="#5A7366" />
+                      <Text style={styles.teaserSub}>{event.ville}</Text>
+                    </View>
+                    <View style={styles.metaRow}>
+                      <View style={[styles.metaChip, styles.metaChipIconRow]}>
+                        <IconSymbol name="calendar" size={11} color="#0D8A52" />
+                        <Text style={styles.metaChipText}>{event.date}</Text>
+                      </View>
+                    </View>
+                  </Card>
+                </PressableScale>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <SectionHeader title="Athlètes près de chez vous" subtitle="D'autres sportifs de votre région" />
+          {nearbyAthletes.loading ? (
+            <View style={{ gap: Spacing.sm }}><SkeletonRow /><SkeletonRow /></View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.md }}>
+              {nearbyAthletes.data.map((athlete) => (
+                <Card key={athlete.id} style={styles.teaserCard}>
+                  <View style={styles.avatarCircle}>
+                    <Text style={styles.avatarCircleText}>{athlete.prenom[0]}</Text>
+                  </View>
+                  <Text style={styles.teaserTitle}>{athlete.prenom}</Text>
+                  <View style={styles.inlineIconText}>
+                    <IconSymbol name="mappin.and.ellipse" size={12} color="#5A7366" />
+                    <Text style={styles.teaserSub}>{athlete.ville}</Text>
+                  </View>
+                  <View style={styles.metaRow}>
+                    <View style={styles.metaChip}>
+                      <Text style={styles.metaChipText}>{athlete.sport}</Text>
+                    </View>
+                    <View style={[styles.metaChip, styles.metaChipOutline]}>
+                      <Text style={[styles.metaChipText, styles.metaChipTextOutline]}>{athlete.niveau}</Text>
+                    </View>
+                  </View>
+                </Card>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+
+        <View style={styles.section}>
+          <SectionHeader title="Ils utilisent LeBonSport" />
+          {testimonials.loading ? (
+            <View style={{ gap: Spacing.sm }}><SkeletonRow /><SkeletonRow /></View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.md }}>
+              {testimonials.data.map((t) => (
+                <Card key={t.id} style={[styles.teaserCard, styles.testimonialCard]}>
+                  <View style={styles.stars}>
+                    {Array.from({ length: t.note }).map((_, i) => (
+                      <IconSymbol key={i} name="star.fill" size={13} color="#F39C12" />
+                    ))}
+                  </View>
+                  <Text style={styles.testimonialText} numberOfLines={4}>"{t.texte}"</Text>
+                  <View style={styles.testimonialFooter}>
+                    <View style={styles.avatarCircleSm}>
+                      <Text style={styles.avatarCircleSmText}>{t.nom[0]}</Text>
+                    </View>
+                    <Text style={styles.testimonialName}>{t.nom}</Text>
+                  </View>
+                </Card>
+              ))}
+            </ScrollView>
+          )}
+        </View>
 
         <Animated.View style={[styles.section, { opacity: howOpacity }]}>
           <Text style={styles.sectionTitle}>Comment ça marche ?</Text>
@@ -231,7 +433,6 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
-        {/*Cta bottom*/}
         <Animated.View
           style={{
             opacity: ctaOpacity,
@@ -239,7 +440,7 @@ export default function HomeScreen() {
           }}
         >
           <LinearGradient
-            colors={["#0F2027", "#1A3A4A", "#203A43"]}
+            colors={["#0D8A52", "#16A06A", "#2ECC8F"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.ctaBox}
@@ -276,7 +477,6 @@ export default function HomeScreen() {
           </LinearGradient>
         </Animated.View>
 
-        {/*Footer*/}
         <View style={styles.footer}>
           <View style={styles.footerLogo}>
             <View style={styles.footerLogoIcon}>
@@ -324,7 +524,6 @@ function HowCard({
 const isWeb = Platform.OS === "web";
 
 const styles = StyleSheet.create({
-  // ← NOUVEAU
   root: {
     flex: 1,
     backgroundColor: "#F8FAF9",
@@ -335,7 +534,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAF9",
   },
 
-  // ─── HERO (paddingTop augmenté pour laisser place au header flottant)
   hero: {
     paddingTop: 60,
     paddingBottom: 60,
@@ -434,7 +632,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 999,
   },
 
-  // ─── SPORTS
   sportsScroll: {
     paddingHorizontal: 16,
     paddingVertical: 20,
@@ -458,9 +655,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
-  sportEmoji: {
-    fontSize: 28,
-  },
   sportLabel: {
     fontSize: 14,
     fontWeight: "600",
@@ -468,7 +662,82 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  // ─── HOW
+  statsBanner: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#E8EDE9",
+  },
+  statItem: { alignItems: "center" },
+  statValue: { fontSize: 24, fontWeight: "800", color: "#0F1F17" },
+  statLabel: { fontSize: 12, color: "#5A7366", marginTop: 2 },
+
+  teaserCard: {
+    width: 210,
+    minHeight: 168,
+    padding: 16,
+  },
+  teaserTitle: { fontSize: 15, fontWeight: "700", color: "#0F1F17", marginBottom: 4 },
+  teaserSub: { fontSize: 12, color: "#5A7366", lineHeight: 17 },
+  inlineIconText: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 },
+
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "#E8F5F0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+
+  avatarCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#E8F5F0",
+    borderWidth: 1.5,
+    borderColor: "#16A06A",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  avatarCircleText: { fontSize: 17, fontWeight: "700", color: "#0D8A52" },
+
+  avatarCircleSm: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#E8F5F0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarCircleSmText: { fontSize: 11, fontWeight: "700", color: "#0D8A52" },
+
+  metaRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: "auto" },
+  metaChip: {
+    backgroundColor: "#F0FBF5",
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+  },
+  metaChipText: { fontSize: 11, fontWeight: "600", color: "#0D8A52" },
+  metaChipIconRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  metaChipOutline: { backgroundColor: "transparent", borderWidth: 1, borderColor: "#E8EDE9" },
+  metaChipTextOutline: { color: "#5A7366" },
+
+  testimonialCard: { minHeight: 160, justifyContent: "space-between" },
+  stars: { flexDirection: "row", gap: 2, marginBottom: 8 },
+  testimonialText: { fontSize: 13, color: "#3D5348", lineHeight: 19, fontStyle: "italic" },
+  testimonialFooter: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12 },
+  testimonialName: { fontSize: 12, fontWeight: "700", color: "#0F1F17" },
+
   section: {
     paddingHorizontal: 20,
     paddingVertical: 32,
@@ -522,7 +791,6 @@ const styles = StyleSheet.create({
   },
   howDesc: { fontSize: 13, color: "#5A7366", lineHeight: 19 },
 
-  // ─── CTA BOTTOM
   ctaBox: {
     margin: 16,
     borderRadius: 20,
@@ -563,7 +831,6 @@ const styles = StyleSheet.create({
   },
   ctaBtnDarkText: { color: "#fff", fontWeight: "600", fontSize: 15 },
 
-  // ─── FOOTER
   footer: {
     paddingHorizontal: 20,
     paddingVertical: 24,

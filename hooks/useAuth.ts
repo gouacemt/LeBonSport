@@ -1,11 +1,27 @@
 import * as AppleAuthentication from 'expo-apple-authentication'
-import { useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
+import { useEffect, useState } from 'react'
 // import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin'
 import { supabase } from '@/services/supabase'
 
 export function useAuth() {
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState<string | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
+  const [sessionLoading, setSessionLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setSessionLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   /*GoogleSignin.configure({
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
@@ -152,5 +168,5 @@ export function useAuth() {
     return true 
   }
 
-return { signUp, signIn, signIn_Apple, /*signIn_Google, */signOut, resetPassword, loading, error }
+return { signUp, signIn, signIn_Apple, /*signIn_Google, */signOut, resetPassword, session, sessionLoading, loading, error }
 }

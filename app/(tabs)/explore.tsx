@@ -1,11 +1,23 @@
 import Header from "@/components/Header";
+import { Badge } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { PressableScale } from "@/components/ui/PressableScale";
+import { SkeletonCard } from "@/components/ui/Skeleton";
+import { Tag } from "@/components/ui/Tag";
+import { NIVEAUX } from "@/constants/options";
+import { getSportIcon } from "@/constants/sportIcons";
+import { Radius, Spacing } from "@/constants/theme";
+import { useFavoris } from "@/hooks/useFavoris";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useSports } from "@/hooks/useSports";
+import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/services/supabase";
-import { useRouter } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  Dimensions,
   Platform,
   RefreshControl,
   SafeAreaView,
@@ -16,18 +28,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 const isWeb = Platform.OS === "web";
-
-const GREEN = "#16A06A";
-const GREEN_LIGHT = "#F0FBF5";
-const BORDER = "#E5E7EB";
-const TEXT = "#111827";
-const TEXT_MUTED = "#9CA3AF";
-const TEXT_SUB = "#6B7280";
-const BG = "#F3F4F6";
-const WHITE = "#FFFFFF";
 
 const TYPE_LABELS: Record<string, string> = {
   club_recrute: "Club qui recrute",
@@ -36,27 +37,6 @@ const TYPE_LABELS: Record<string, string> = {
   cherche_equipe: "Cherche une équipe",
   partie_ouverte: "Partie ouverte",
 };
-
-
-const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  club_recrute: { bg: "#EAF0FF", text: "#3B5BDB" },
-  equipe_joueurs: { bg: "#F5EAF5", text: "#9B59B6" },
-  cherche_club: { bg: "#E8F5F0", text: "#1A8C5B" },
-  cherche_equipe: { bg: "#FFF8E1", text: "#F39C12" },
-  partie_ouverte: { bg: "#FFF0E6", text: "#E67E22" },
-};
-
-const SPORT_FILTERS = [
-  "Tous",
-  "Football",
-  "Padel",
-  "Tennis",
-  "Basketball",
-  "Running",
-  "Volleyball",
-  "Natation",
-  "Cyclisme",
-];
 
 interface Annonce {
   id: string;
@@ -73,66 +53,73 @@ interface Annonce {
 }
 
 function AnnonceCard({ annonce }: { annonce: Annonce }) {
-  const typeColor = TYPE_COLORS[annonce.type] ?? {
-    bg: GREEN_LIGHT,
-    text: GREEN,
-  };
+  const { colors } = useTheme();
+  const { isFavori, toggleFavori } = useFavoris();
+  const favori = isFavori(annonce.id);
   const date = new Date(annonce.created_at).toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "short",
   });
 
   return (
-    <View style={styles.card}>
+    <PressableScale
+      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      onPress={() => router.push(`/annonce/${annonce.id}` as any)}
+    >
       <View style={styles.cardHeader}>
-        <View style={[styles.typeBadge, { backgroundColor: typeColor.bg }]}>
-          <Text style={[styles.typeBadgeText, { color: typeColor.text }]}>
-            {TYPE_LABELS[annonce.type] ?? annonce.type}
-          </Text>
+        <Badge label={TYPE_LABELS[annonce.type] ?? annonce.type} variant="success" />
+        <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
+          <Text style={[styles.cardDate, { color: colors.textMuted }]}>{date}</Text>
+          <TouchableOpacity onPress={() => toggleFavori(annonce.id)} hitSlop={8}>
+            <IconSymbol name={favori ? "heart.fill" : "heart"} size={20} color={favori ? colors.error : colors.textMuted} />
+          </TouchableOpacity>
         </View>
-        <Text style={styles.cardDate}>{date}</Text>
       </View>
 
-      <Text style={styles.cardTitle} numberOfLines={2}>
+      <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={2}>
         {annonce.titre}
       </Text>
-      <Text style={styles.cardDesc} numberOfLines={3}>
+      <Text style={[styles.cardDesc, { color: colors.textMuted }]} numberOfLines={3}>
         {annonce.description}
       </Text>
 
       <View style={styles.cardTags}>
-        <View style={styles.tag}>
-          <Text style={styles.tagText}>⚽ {annonce.sport}</Text>
-        </View>
+        <Tag icon={getSportIcon(annonce.sport)} label={annonce.sport} color={colors.textMuted} backgroundColor={colors.surfaceAlt} />
         {annonce.niveau && annonce.niveau !== "Tous niveaux acceptés" && (
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>📊 {annonce.niveau}</Text>
-          </View>
+          <Tag icon="chart.bar.fill" label={annonce.niveau} color={colors.textMuted} backgroundColor={colors.surfaceAlt} />
         )}
-        <View style={styles.tag}>
-          <Text style={styles.tagText}>📍 {annonce.ville}</Text>
-        </View>
+        <Tag icon="mappin.and.ellipse" label={annonce.ville} color={colors.textMuted} backgroundColor={colors.surfaceAlt} />
         {annonce.places && (
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>
-              👤 {annonce.places} place{annonce.places > 1 ? "s" : ""}
-            </Text>
-          </View>
+          <Tag
+            icon="person.fill"
+            label={`${annonce.places} place${annonce.places > 1 ? "s" : ""}`}
+            color={colors.textMuted}
+            backgroundColor={colors.surfaceAlt}
+          />
         )}
       </View>
-    </View>
+    </PressableScale>
   );
 }
 
 export default function ExploreScreen() {
-  const router = useRouter();
+  const { colors } = useTheme();
+  const routerNav = useRouter();
   const scrollY = useRef(new Animated.Value(0)).current;
+  const { session, sessionLoading } = useRequireAuth();
+  const { sports } = useSports();
+  const params = useLocalSearchParams<{ sport?: string }>();
 
   const [annonces, setAnnonces] = useState<Annonce[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
-  const [sportFilter, setSportFilter] = useState("Tous");
+  const [sportFilter, setSportFilter] = useState(params.sport || "Tous");
+  const [niveauFilter, setNiveauFilter] = useState("Tous");
+
+  useEffect(() => {
+    if (params.sport) setSportFilter(params.sport);
+  }, [params.sport]);
 
   const fetchAnnonces = useCallback(async () => {
     let query = supabase
@@ -140,25 +127,46 @@ export default function ExploreScreen() {
       .select("*")
       .order("created_at", { ascending: false });
     if (sportFilter !== "Tous") query = query.eq("sport", sportFilter);
-    if (search.trim()) query = query.ilike("titre", `%${search.trim()}%`);
+    if (search.trim()) {
+      const s = search.trim();
+      query = query.or(`titre.ilike.%${s}%,description.ilike.%${s}%,ville.ilike.%${s}%`);
+    }
     const { data, error } = await query;
-    if (!error && data) setAnnonces(data);
+    let results = !error && data ? data : [];
+    if (niveauFilter !== "Tous") {
+      results = results.filter((a) => a.niveau === niveauFilter);
+    }
+    setAnnonces(results);
     setLoading(false);
     setRefreshing(false);
-  }, [sportFilter, search]);
+  }, [sportFilter, niveauFilter, search]);
 
   useEffect(() => {
     setLoading(true);
     fetchAnnonces();
   }, [fetchAnnonces]);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchAnnonces();
+    }, [fetchAnnonces])
+  );
+
   const onRefresh = () => {
     setRefreshing(true);
     fetchAnnonces();
   };
 
+  if (sessionLoading || !session) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
       <View style={styles.root}>
         <Header scrollY={scrollY} />
         <Animated.ScrollView
@@ -174,45 +182,44 @@ export default function ExploreScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={GREEN}
+              tintColor={colors.primary}
             />
           }
         >
-          {/* Hero */}
-          <View style={styles.hero}>
-            <Text style={styles.heroTitle}>Explorer les annonces</Text>
-            <Text style={styles.heroSub}>
+          <View style={[styles.hero, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+            <Text style={[styles.heroTitle, { color: colors.text }]}>Explorer les annonces</Text>
+            <Text style={[styles.heroSub, { color: colors.textMuted }]}>
               Trouvez votre prochain partenaire sportif
             </Text>
-            <View style={styles.searchBar}>
-              <Text style={styles.searchIcon}>🔍</Text>
+            <View style={[styles.searchBar, { backgroundColor: colors.background, borderColor: colors.border }]}>
+              <IconSymbol name="magnifyingglass" size={18} color={colors.textMuted} />
               <TextInput
-                style={styles.searchInput}
-                placeholder="Rechercher une annonce..."
-                placeholderTextColor={TEXT_MUTED}
+                style={[styles.searchInput, { color: colors.text }]}
+                placeholder="Rechercher (titre, description, ville)..."
+                placeholderTextColor={colors.textMuted}
                 value={search}
                 onChangeText={setSearch}
               />
               {search.length > 0 && (
                 <TouchableOpacity onPress={() => setSearch("")}>
-                  <Text style={{ color: TEXT_MUTED, fontSize: 18 }}>✕</Text>
+                  <Text style={{ color: colors.textMuted, fontSize: 18 }}>✕</Text>
                 </TouchableOpacity>
               )}
             </View>
           </View>
 
-          {/* Filtres */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filtersScroll}
           >
-            {SPORT_FILTERS.map((s) => (
+            {["Tous", ...sports.map((s) => s.nom)].map((s) => (
               <TouchableOpacity
                 key={s}
                 style={[
                   styles.filterChip,
-                  sportFilter === s && styles.filterChipActive,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  sportFilter === s && { backgroundColor: colors.primary, borderColor: colors.primary },
                 ]}
                 onPress={() => setSportFilter(s)}
                 activeOpacity={0.8}
@@ -220,7 +227,8 @@ export default function ExploreScreen() {
                 <Text
                   style={[
                     styles.filterChipText,
-                    sportFilter === s && styles.filterChipTextActive,
+                    { color: colors.textMuted },
+                    sportFilter === s && { color: "#fff", fontWeight: "600" },
                   ]}
                 >
                   {s}
@@ -229,37 +237,62 @@ export default function ExploreScreen() {
             ))}
           </ScrollView>
 
-          {/* Résultats */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={[styles.filtersScroll, { paddingTop: 0 }]}
+          >
+            {["Tous", ...NIVEAUX].map((n) => (
+              <TouchableOpacity
+                key={n}
+                style={[
+                  styles.filterChipSm,
+                  { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+                  niveauFilter === n && { backgroundColor: colors.primaryLight, borderColor: colors.primary },
+                ]}
+                onPress={() => setNiveauFilter(n)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.filterChipTextSm,
+                    { color: colors.textMuted },
+                    niveauFilter === n && { color: colors.primaryDark, fontWeight: "600" },
+                  ]}
+                >
+                  {n}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
           <View style={styles.results}>
             {loading ? (
-              <ActivityIndicator
-                size="large"
-                color={GREEN}
-                style={{ marginTop: 60 }}
-              />
-            ) : annonces.length === 0 ? (
-              <View style={styles.empty}>
-                <Text style={styles.emptyEmoji}>🏃</Text>
-                <Text style={styles.emptyTitle}>Aucune annonce trouvée</Text>
-                <Text style={styles.emptySub}>
-                  Soyez le premier à publier !
-                </Text>
-                <TouchableOpacity
-                  style={styles.emptyBtn}
-                  onPress={() => router.push("/create-annonce")}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.emptyBtnText}>Créer une annonce</Text>
-                </TouchableOpacity>
+              <View style={styles.grid}>
+                {[1, 2, 3, 4].map((i) => (
+                  <View key={i} style={styles.skeletonCardWrap}>
+                    <SkeletonCard />
+                  </View>
+                ))}
               </View>
+            ) : annonces.length === 0 ? (
+              <EmptyState
+                icon="sport.running"
+                title="Aucune annonce trouvée"
+                subtitle="Soyez le premier à publier !"
+                ctaLabel="Créer une annonce"
+                onCta={() => routerNav.push("/create-annonce")}
+              />
             ) : (
               <>
-                <Text style={styles.resultsCount}>
+                <Text style={[styles.resultsCount, { color: colors.textMuted }]}>
                   {annonces.length} annonce{annonces.length > 1 ? "s" : ""}
                 </Text>
                 <View style={styles.grid}>
                   {annonces.map((a) => (
-                    <AnnonceCard key={a.id} annonce={a} />
+                    <View key={a.id} style={styles.cardWrap}>
+                      <AnnonceCard annonce={a} />
+                    </View>
                   ))}
                 </View>
               </>
@@ -272,76 +305,64 @@ export default function ExploreScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: BG },
+  safe: { flex: 1 },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
   root: { flex: 1 },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: 40 },
 
   hero: {
-    backgroundColor: WHITE,
     paddingTop: 80,
     paddingBottom: 24,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: BORDER,
     alignItems: isWeb ? "center" : "flex-start",
   },
-  heroTitle: {
-    fontSize: isWeb ? 32 : 26,
-    fontWeight: "800",
-    color: TEXT,
-    marginBottom: 4,
-  },
-  heroSub: { fontSize: 15, color: TEXT_SUB, marginBottom: 16 },
+  heroTitle: { fontSize: isWeb ? 32 : 26, fontWeight: "800", marginBottom: 4 },
+  heroSub: { fontSize: 15, marginBottom: 16 },
 
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: BG,
-    borderRadius: 12,
+    borderRadius: Radius.md,
     borderWidth: 1.5,
-    borderColor: BORDER,
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 10,
     width: isWeb ? 600 : "100%",
   },
-  searchIcon: { fontSize: 16 },
-  searchInput: { flex: 1, fontSize: 15, color: TEXT },
+  searchInput: { flex: 1, fontSize: 15 },
 
   filtersScroll: { paddingHorizontal: 16, paddingVertical: 14, gap: 8 },
   filterChip: {
-    backgroundColor: WHITE,
-    borderRadius: 20,
+    borderRadius: Radius.pill,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderWidth: 1.5,
-    borderColor: BORDER,
   },
-  filterChipActive: { backgroundColor: GREEN, borderColor: GREEN },
-  filterChipText: { fontSize: 14, fontWeight: "500", color: TEXT_SUB },
-  filterChipTextActive: { color: WHITE, fontWeight: "600" },
+  filterChipText: { fontSize: 14, fontWeight: "500" },
+  filterChipSm: {
+    borderRadius: Radius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+  },
+  filterChipTextSm: { fontSize: 12, fontWeight: "500" },
 
   results: { paddingHorizontal: 16, paddingTop: 4 },
-  resultsCount: {
-    fontSize: 13,
-    color: TEXT_MUTED,
-    marginBottom: 12,
-    marginTop: 4,
-  },
+  resultsCount: { fontSize: 13, marginBottom: 12, marginTop: 4 },
   grid: {
     flexDirection: isWeb ? "row" : "column",
     flexWrap: isWeb ? "wrap" : undefined,
     gap: 14,
   },
+  cardWrap: { width: isWeb ? ("calc(50% - 7px)" as any) : "100%" },
+  skeletonCardWrap: { width: isWeb ? ("calc(50% - 7px)" as any) : "100%" },
 
   card: {
-    backgroundColor: WHITE,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: 18,
     borderWidth: 1,
-    borderColor: BORDER,
-    width: isWeb ? ("calc(50% - 7px)" as any) : "100%",
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 10,
@@ -354,44 +375,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  typeBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  typeBadgeEmoji: { fontSize: 13 },
-  typeBadgeText: { fontSize: 12, fontWeight: "600" },
-  cardDate: { fontSize: 12, color: TEXT_MUTED },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: TEXT,
-    marginBottom: 8,
-    lineHeight: 24,
-  },
-  cardDesc: { fontSize: 14, color: TEXT_SUB, lineHeight: 20, marginBottom: 12 },
+  cardDate: { fontSize: 12 },
+  cardTitle: { fontSize: 17, fontWeight: "700", marginBottom: 8, lineHeight: 24 },
+  cardDesc: { fontSize: 14, lineHeight: 20, marginBottom: 12 },
 
   cardTags: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  tag: {
-    backgroundColor: BG,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  tagText: { fontSize: 12, color: TEXT_SUB, fontWeight: "500" },
-
-  empty: { alignItems: "center", paddingTop: 60, paddingBottom: 40 },
-  emptyEmoji: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { fontSize: 20, fontWeight: "700", color: TEXT, marginBottom: 8 },
-  emptySub: { fontSize: 15, color: TEXT_MUTED, marginBottom: 24 },
-  emptyBtn: {
-    backgroundColor: GREEN,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-  },
-  emptyBtnText: { color: WHITE, fontWeight: "700", fontSize: 15 },
 });

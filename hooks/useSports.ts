@@ -28,6 +28,7 @@ export function useSports() {
         }
         setLoading(false)
       })
+    loadUserSports()
   }, [])
 
   // ─── Permet aux user de selectionner ses sports ─────────────────
@@ -61,6 +62,16 @@ export function useSports() {
 
     if (user === null) {
       setError('Utilisateur non connecté')
+      setSaving(false)
+      return false
+    }
+
+    // On supprime d'abord les sports déjà enregistrés pour cet utilisateur,
+    // pour éviter les doublons si l'utilisateur modifie sa sélection plusieurs fois
+    const { error: deleteError } = await supabase.from('user_sports').delete().eq('user_id', user.id)
+
+    if (deleteError) {
+      setError(deleteError.message)
       setSaving(false)
       return false
     }

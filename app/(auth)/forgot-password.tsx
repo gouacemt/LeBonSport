@@ -2,8 +2,10 @@ import { useState } from 'react'
 import {Text, TextInput, TouchableOpacity,StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, View, StatusBar, ScrollView} from 'react-native'
 import { Link } from 'expo-router'
 import { useAuth } from '@/hooks/useAuth'
+import { useTheme } from '@/hooks/useTheme'
 
 export default function ForgotPasswordScreen() {
+  const { colors } = useTheme()
   const [email, setEmail]   = useState('')
   const [sent, setSent]     = useState(false)
   const { resetPassword, loading, error } = useAuth()
@@ -14,8 +16,8 @@ export default function ForgotPasswordScreen() {
   }
 
   return (
-    <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#E24B4A" />
+    <View style={[styles.root, { backgroundColor: colors.primary }]}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -25,33 +27,34 @@ export default function ForgotPasswordScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.bottomSheet}>
-            <Text style={styles.title}>Mot de passe oublié</Text>
+          <View style={[styles.bottomSheet, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.title, { color: colors.text }]}>Mot de passe oublié</Text>
 
             {sent ? (
               <>
-                <Text style={styles.registerText}>
+                <Text style={[styles.registerText, { color: colors.textMuted }]}>
                   Un email de réinitialisation a été envoyé à {email}
                 </Text>
                 <View style={styles.registerRow}>
-                  <Text style={styles.registerText}>Mot de passse retrouvé ? </Text>
-                  <Link href="/login" style={styles.registerLink}>
+                  <Text style={[styles.registerText, { color: colors.textMuted }]}>Mot de passe retrouvé ? </Text>
+                  <Link href="/login" style={[styles.registerLink, { color: colors.primary }]}>
                     Retour à la connexion
                   </Link>
                 </View>
               </>
             ) : (
               <>
-                <Text style={styles.subtitle}>
+                <Text style={[styles.subtitle, { color: colors.textMuted }]}>
                   Entre ton email et on t'envoie un lien de réinitialisation.
                 </Text>
 
-                {error && <Text style={styles.error}>{error}</Text>}
+                {error && <Text style={[styles.error, { color: colors.error, backgroundColor: colors.errorBg }]}>{error}</Text>}
 
-                <Text style={styles.label}>Email</Text>
+                <Text style={[styles.label, { color: colors.textMuted }]}>Email</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surfaceAlt, color: colors.text }]}
                   placeholder="Email"
+                  placeholderTextColor={colors.textSubtle}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -59,7 +62,7 @@ export default function ForgotPasswordScreen() {
                 />
 
                 <TouchableOpacity
-                  style={styles.button}
+                  style={[styles.button, { backgroundColor: colors.primary }]}
                   onPress={handleReset}
                   disabled={loading}
                 >
@@ -70,8 +73,8 @@ export default function ForgotPasswordScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.registerRow}>
-                  <Text style={styles.registerText}>Mot de passse retrouvé ? </Text>
-                  <Link href="/login" style={styles.registerLink}>
+                  <Text style={[styles.registerText, { color: colors.textMuted }]}>Mot de passe retrouvé ? </Text>
+                  <Link href="/login" style={[styles.registerLink, { color: colors.primary }]}>
                     Retour à la connexion
                   </Link>
                 </View>
@@ -85,18 +88,18 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  root:          {flex: 1, backgroundColor: '#E24B4A'},
+  root:          {flex: 1},
   keyboardView:  {flex: 1},
   scrollContent: {flexGrow: 1, justifyContent: 'flex-end'},
-  bottomSheet:   {backgroundColor: '#fff', borderTopLeftRadius: 36, borderTopRightRadius: 36, padding: 28, paddingBottom: Platform.OS === 'ios' ? 48 : 32},
-  title:         {fontSize: 24, fontWeight: 'bold', color: '#1a1a1a', marginBottom: 4},
-  subtitle:      {fontSize: 14, color: '#6B7280', marginBottom: 24},
-  label:         {fontSize: 13, fontWeight: '500', color: '#6B7280', marginBottom: 6},
-  input:         {borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, padding: 14, fontSize: 15, backgroundColor: '#FAFAFA', marginBottom: 16, color: '#1a1a1a'},
-  button:        {backgroundColor: '#E24B4A', borderRadius: 12, padding: 16, alignItems: 'center', marginBottom: 16},
+  bottomSheet:   {borderTopLeftRadius: 36, borderTopRightRadius: 36, padding: 28, paddingBottom: Platform.OS === 'ios' ? 48 : 32},
+  title:         {fontSize: 24, fontWeight: 'bold', marginBottom: 4},
+  subtitle:      {fontSize: 14, marginBottom: 24},
+  label:         {fontSize: 13, fontWeight: '500', marginBottom: 6},
+  input:         {borderWidth: 1, borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 16},
+  button:        {borderRadius: 12, padding: 16, alignItems: 'center', marginBottom: 16},
   buttonText:    {color: '#fff', fontWeight: '600', fontSize: 16},
-  error:         {color: '#991B1B', backgroundColor: '#FEE2E2', padding: 10, borderRadius: 8, marginBottom: 16, fontSize: 14},
+  error:         {padding: 10, borderRadius: 8, marginBottom: 16, fontSize: 14},
   registerRow:   {flexDirection: 'row', justifyContent: 'center', marginTop: 8},
-  registerText:  {fontSize: 14, color: '#6B7280'},
-  registerLink:  {fontSize: 14, color: '#E24B4A', fontWeight: '600'},
+  registerText:  {fontSize: 14},
+  registerLink:  {fontSize: 14, fontWeight: '600'},
 })

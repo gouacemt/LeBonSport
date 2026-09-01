@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import {View, Text, TextInput, TouchableOpacity,StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Image, StatusBar, ScrollView } from 'react-native'			  
+import {View, Text, TextInput, TouchableOpacity,StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Image, StatusBar, ScrollView } from 'react-native'
 import * as AppleAuthentication from 'expo-apple-authentication'
-//import { GoogleSigninButton } from '@react-native-google-signin/google-signin'
+import { LinearGradient } from 'expo-linear-gradient'
 import { Link, router } from 'expo-router'
 import { useAuth } from '@/hooks/useAuth'
+
+const GREEN       = '#16A06A'
+const GREEN_DARK  = '#0D8A52'
 
 export default function LoginScreen() {
   const [email, setEmail]       = useState('')
@@ -27,7 +30,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#E24B4A" />
+      <StatusBar barStyle="light-content" backgroundColor={GREEN_DARK} />
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -37,15 +40,17 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-									 
-          <View style={styles.topSection}>
+          <LinearGradient
+            colors={[GREEN, GREEN_DARK]}
+            style={styles.topSection}
+          >
             <View style={styles.logoContainer}>
               <Image source={require('@/assets/images/Login_Sportif.png')} style={styles.logoImage} />
             </View>
             <Text style={styles.appName}>LeBonSport</Text>
             <Text style={styles.appSubtitle}>Trouve ton partenaire sportif</Text>
-          </View>
-									
+          </LinearGradient>
+
           <View style={styles.bottomSheet}>
             <Text style={styles.title}>Bon retour !</Text>
             <Text style={styles.subtitle}>Connecte-toi à ton compte</Text>
@@ -116,25 +121,25 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  root:          {flex: 1, backgroundColor: '#E24B4A'},
+  root:          {flex: 1, backgroundColor: GREEN_DARK},
   keyboardView:  {flex: 1},
   scrollContent: {flexGrow: 1, justifyContent: 'flex-end'},
-  topSection:    {alignItems: 'center', justifyContent: 'center', paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ?? 40) + 20 : 80, paddingBottom: 40, minHeight: 300},
-  logoContainer: {width: 110, height: 110, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: 16},
+  topSection:    {alignItems: 'center', justifyContent: 'center', paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ?? 40) + 20 : 80, paddingBottom: 48, minHeight: 300},
+  logoContainer: {width: 110, height: 110, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)'},
   logoImage:     {width: 80, height: 80},
-  appName:       {fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 6},
-  appSubtitle:   {fontSize: 14, color: 'rgba(255,255,255,0.8)'},
-  bottomSheet:   {backgroundColor: '#fff', borderTopLeftRadius: 36, borderTopRightRadius: 36, padding: 28, paddingBottom: Platform.OS === 'ios' ? 48 : 32},
+  appName:       {fontSize: 30, fontWeight: 'bold', color: '#fff', marginBottom: 6, letterSpacing: 0.3},
+  appSubtitle:   {fontSize: 14, color: 'rgba(255,255,255,0.85)'},
+  bottomSheet:   {backgroundColor: '#fff', borderTopLeftRadius: 36, borderTopRightRadius: 36, padding: 28, paddingBottom: Platform.OS === 'ios' ? 48 : 32, shadowColor: '#000', shadowOffset: {width: 0, height: -4}, shadowOpacity: 0.08, shadowRadius: 16, elevation: 8},
   title:         {fontSize: 24, fontWeight: 'bold', color: '#1a1a1a', marginBottom: 4},
   subtitle:      {fontSize: 14, color: '#6B7280', marginBottom: 24},
   label:         {fontSize: 13, fontWeight: '500', color: '#6B7280', marginBottom: 6},
   input:         {borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, padding: 14, fontSize: 15, backgroundColor: '#FAFAFA', marginBottom: 16, color: '#1a1a1a'},
-  forgotLink:    {textAlign: 'right', color: '#E24B4A', fontSize: 13, fontWeight: '500', marginBottom: 24},
-  button:        {backgroundColor: '#E24B4A', borderRadius: 12, padding: 16, alignItems: 'center', marginBottom: 16},
+  forgotLink:    {textAlign: 'right', color: GREEN, fontSize: 13, fontWeight: '500', marginBottom: 24},
+  button:        {backgroundColor: GREEN, borderRadius: 12, padding: 16, alignItems: 'center', marginBottom: 16, shadowColor: GREEN_DARK, shadowOffset: {width: 0, height: 4}, shadowOpacity: 0.25, shadowRadius: 8, elevation: 3},
   buttonText:    {color: '#fff', fontWeight: '600', fontSize: 16},
   appleButton:   {width: '100%', height: 52, marginBottom: 16},
   error:         {color: '#991B1B', backgroundColor: '#FEE2E2', padding: 10, borderRadius: 8, marginBottom: 16, fontSize: 14},
   registerRow:   {flexDirection: 'row', justifyContent: 'center', marginTop: 8},
   registerText:  {fontSize: 14, color: '#6B7280'},
-  registerLink:  {fontSize: 14, color: '#E24B4A', fontWeight: '600'},
+  registerLink:  {fontSize: 14, color: GREEN, fontWeight: '600'},
 })

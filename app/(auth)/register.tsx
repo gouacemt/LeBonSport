@@ -2,8 +2,10 @@ import { useState } from 'react'
 import {View, Text, TextInput, TouchableOpacity,StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StatusBar} from 'react-native'
 import { Link, router } from 'expo-router'
 import { useAuth } from '@/hooks/useAuth'
+import { useTheme } from '@/hooks/useTheme'
 
 export default function RegisterScreen() {
+  const { colors } = useTheme()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm]   = useState('')
@@ -16,8 +18,8 @@ export default function RegisterScreen() {
   }
 
   return (
-    <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#E24B4A" />
+    <View style={[styles.root, { backgroundColor: colors.primary }]}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -27,42 +29,45 @@ export default function RegisterScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.bottomSheet}>
-            <Text style={styles.title}>Créer un compte</Text>
-            <Text style={styles.subtitle}>Rejoins la communauté LeBonSport</Text>
+          <View style={[styles.bottomSheet, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.title, { color: colors.text }]}>Créer un compte</Text>
+            <Text style={[styles.subtitle, { color: colors.textMuted }]}>Rejoins la communauté LeBonSport</Text>
 
-            {error && <Text style={styles.error}>{error}</Text>}
+            {error && <Text style={[styles.error, { color: colors.error, backgroundColor: colors.errorBg }]}>{error}</Text>}
 
-            <Text style={styles.label}>Email</Text>
+            <Text style={[styles.label, { color: colors.textMuted }]}>Email</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surfaceAlt, color: colors.text }]}
               placeholder="Email"
+              placeholderTextColor={colors.textSubtle}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
             />
 
-            <Text style={styles.label}>Mot de passe</Text>
+            <Text style={[styles.label, { color: colors.textMuted }]}>Mot de passe</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surfaceAlt, color: colors.text }]}
               placeholder="Mot de passe"
+              placeholderTextColor={colors.textSubtle}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
             />
 
-            <Text style={styles.label}>Confirmer le mot de passe</Text>
+            <Text style={[styles.label, { color: colors.textMuted }]}>Confirmer le mot de passe</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { borderColor: colors.border, backgroundColor: colors.surfaceAlt, color: colors.text }]}
               placeholder="Confirmer le mot de passe"
+              placeholderTextColor={colors.textSubtle}
               value={confirm}
               onChangeText={setConfirm}
               secureTextEntry
             />
 
             <TouchableOpacity
-              style={styles.button}
+              style={[styles.button, { backgroundColor: colors.primary }]}
               onPress={handleRegister}
               disabled={loading}
             >
@@ -73,8 +78,8 @@ export default function RegisterScreen() {
             </TouchableOpacity>
 
             <View style={styles.registerRow}>
-              <Text style={styles.registerText}>Déjà un compte ? </Text>
-              <Link href="/login" style={styles.registerLink}>
+              <Text style={[styles.registerText, { color: colors.textMuted }]}>Déjà un compte ? </Text>
+              <Link href="/login" style={[styles.registerLink, { color: colors.primary }]}>
                 Se connecter
               </Link>
             </View>
@@ -86,18 +91,18 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  root:          {flex: 1, backgroundColor: '#E24B4A'},
+  root:          {flex: 1},
   keyboardView:  {flex: 1},
   scrollContent: {flexGrow: 1, justifyContent: 'flex-end'},
-  bottomSheet:   {backgroundColor: '#fff', borderTopLeftRadius: 36, borderTopRightRadius: 36, padding: 28, paddingBottom: Platform.OS === 'ios' ? 48 : 32},
-  title:         {fontSize: 24, fontWeight: 'bold', color: '#1a1a1a', marginBottom: 4},
-  subtitle:      {fontSize: 14, color: '#6B7280', marginBottom: 24},
-  label:         {fontSize: 13, fontWeight: '500', color: '#6B7280', marginBottom: 6},
-  input:         {borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, padding: 14, fontSize: 15, backgroundColor: '#FAFAFA', marginBottom: 16, color: '#1a1a1a'},
-  button:        {backgroundColor: '#E24B4A', borderRadius: 12, padding: 16, alignItems: 'center', marginBottom: 16},
+  bottomSheet:   {borderTopLeftRadius: 36, borderTopRightRadius: 36, padding: 28, paddingBottom: Platform.OS === 'ios' ? 48 : 32},
+  title:         {fontSize: 24, fontWeight: 'bold', marginBottom: 4},
+  subtitle:      {fontSize: 14, marginBottom: 24},
+  label:         {fontSize: 13, fontWeight: '500', marginBottom: 6},
+  input:         {borderWidth: 1, borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 16},
+  button:        {borderRadius: 12, padding: 16, alignItems: 'center', marginBottom: 16},
   buttonText:    {color: '#fff', fontWeight: '600', fontSize: 16},
-  error:         {color: '#991B1B', backgroundColor: '#FEE2E2', padding: 10, borderRadius: 8, marginBottom: 16, fontSize: 14},
+  error:         {padding: 10, borderRadius: 8, marginBottom: 16, fontSize: 14},
   registerRow:   {flexDirection: 'row', justifyContent: 'center', marginTop: 8},
-  registerText:  {fontSize: 14, color: '#6B7280'},
-  registerLink:  {fontSize: 14, color: '#E24B4A', fontWeight: '600'},
+  registerText:  {fontSize: 14},
+  registerLink:  {fontSize: 14, fontWeight: '600'},
 })

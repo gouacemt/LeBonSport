@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import {
-  View, Text, TextInput, TouchableOpacity, ScrollView,
+  ActivityIndicator, View, Text, TextInput, TouchableOpacity, ScrollView,
   StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, Dimensions,
 } from 'react-native'
 import { router } from 'expo-router'
 import { supabase } from '@/services/supabase'
-import { useAuth } from '@/hooks/useAuth'
+import { useRequireAuth } from '@/hooks/useRequireAuth'
 
 const { width } = Dimensions.get('window')
 const isWeb = Platform.OS === 'web'
@@ -75,7 +75,7 @@ function Dropdown({ label, placeholder, options, value, onChange }: {
 }
 
 export default function CreerAnnonce() {
-  const { session } = useAuth()
+  const { session, sessionLoading } = useRequireAuth()
   const [type, setType]           = useState<string | null>(null)
   const [sport, setSport]         = useState('')
   const [niveau, setNiveau]       = useState('Tous niveaux acceptés')
@@ -92,7 +92,16 @@ export default function CreerAnnonce() {
   const handleSubmit = async () => {
     if (!canSubmit || loading) return
     setLoading(true)
+
+    const { data: userData } = await supabase.auth.getUser()
+    const user = userData.user
+    if (!user) {
+      setLoading(false)
+      return
+    }
+
     const { error } = await supabase.from('annonces').insert({
+      user_id: user.id,
       type, sport, niveau, titre, description, ville,
       club: club || null,
       places: places ? parseInt(places) : null,
@@ -100,14 +109,21 @@ export default function CreerAnnonce() {
     })
     setLoading(false)
     if (error) { console.error(error); return }
-    router.push('/(tabs)')
+    router.push('/(tabs)/explore')
+  }
+
+  if (sessionLoading || !session) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={GREEN} />
+      </View>
+    )
   }
 
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
-        {/* Header */}
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
             <Text style={styles.backArrow}>←</Text>
@@ -121,11 +137,9 @@ export default function CreerAnnonce() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Card principale */}
           <View style={styles.card}>
             <Text style={styles.title}>Créer une annonce</Text>
 
-            {/* Type d'annonce */}
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>
                 Type d'annonce <Text style={{ color: GREEN }}>*</Text>
@@ -138,9 +152,7 @@ export default function CreerAnnonce() {
                     style={[styles.typeCard, selected && styles.typeCardSelected]}
                     onPress={() => setType(t.id)}
                     activeOpacity={0.85}
-                  >
-                    <Text style={styles.typeEmoji}>{t.emoji}</Text>
-                    <Text style={[styles.typeLabel, selected && { color: GREEN, fontWeight: '600' }]}>
+                  >                    <Text style={[styles.typeLabel, selected && { color: GREEN, fontWeight: '600' }]}>
                       {t.label}
                     </Text>
                     {selected && (
@@ -153,18 +165,15 @@ export default function CreerAnnonce() {
               })}
             </View>
 
-            {/* Formulaire */}
             {type && (
               <View style={styles.form}>
 
-                {/* Sport + Niveau */}
                 <View style={styles.row}>
                   <Dropdown label="Sport *" placeholder="Sélectionner" options={SPORTS} value={sport} onChange={setSport} />
                   <View style={{ width: 16 }} />
                   <Dropdown label="Niveau requis" placeholder="Tous niveaux" options={NIVEAUX} value={niveau} onChange={setNiveau} />
                 </View>
 
-                {/* Titre */}
                 <Text style={styles.label}>Titre de l'annonce <Text style={{ color: GREEN }}>*</Text></Text>
                 <TextInput
                   style={styles.input}
@@ -174,7 +183,6 @@ export default function CreerAnnonce() {
                   onChangeText={setTitre}
                 />
 
-                {/* Description */}
                 <Text style={styles.label}>Description <Text style={{ color: GREEN }}>*</Text></Text>
                 <TextInput
                   style={[styles.input, styles.textarea]}
@@ -187,7 +195,6 @@ export default function CreerAnnonce() {
                   textAlignVertical="top"
                 />
 
-                {/* Ville + Club */}
                 <View style={styles.row}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.label}>Ville <Text style={{ color: GREEN }}>*</Text></Text>
@@ -200,7 +207,6 @@ export default function CreerAnnonce() {
                   </View>
                 </View>
 
-                {/* Places */}
                 <Text style={styles.label}>Places disponibles</Text>
                 <TextInput
                   style={[styles.input, { maxWidth: isWeb ? 200 : '50%' }]}
@@ -211,7 +217,6 @@ export default function CreerAnnonce() {
                   keyboardType="numeric"
                 />
 
-                {/* Téléphone */}
                 <Text style={styles.label}>Téléphone de contact <Text style={{ color: TEXT_MUTED, fontWeight: '400' }}>(optionnel)</Text></Text>
                 <TextInput
                   style={styles.input}
@@ -222,14 +227,12 @@ export default function CreerAnnonce() {
                   keyboardType="phone-pad"
                 />
 
-                {/* Image */}
                 <Text style={styles.label}>Image <Text style={{ color: TEXT_MUTED, fontWeight: '400' }}>(optionnel)</Text></Text>
                 <TouchableOpacity style={styles.imagePicker} activeOpacity={0.7}>
                   <Text style={styles.imageIcon}>↑</Text>
                   <Text style={styles.imageText}>Cliquez pour ajouter une image</Text>
                 </TouchableOpacity>
 
-                {/* Bouton publier */}
                 <TouchableOpacity
                   style={[styles.submitBtn, (!canSubmit || loading) && styles.submitBtnDisabled]}
                   onPress={handleSubmit}
@@ -251,6 +254,7 @@ export default function CreerAnnonce() {
 
 const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: BG },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: BG },
   topBar: {
     paddingHorizontal: 24, paddingVertical: 14,
     backgroundColor: WHITE,
@@ -289,7 +293,6 @@ const styles = StyleSheet.create({
   section:      { marginBottom: 8 },
   sectionLabel: { fontSize: 15, fontWeight: '600', color: TEXT, marginBottom: 12 },
 
-  // Type cards
   typeCard: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: WHITE,
@@ -305,7 +308,6 @@ const styles = StyleSheet.create({
   },
   checkIcon: { color: WHITE, fontSize: 13, fontWeight: '700' },
 
-  // Form
   form:  { marginTop: 24 },
   row:   { flexDirection: isWeb ? 'row' : 'column', marginBottom: 4, gap: isWeb ? 0 : 0 },
   label: { fontSize: 14, fontWeight: '600', color: TEXT, marginBottom: 6, marginTop: 14 },
@@ -317,7 +319,6 @@ const styles = StyleSheet.create({
   },
   textarea: { height: 120, paddingTop: 12 },
 
-  // Dropdown
   dropdown: {
     backgroundColor: WHITE, borderWidth: 1.5, borderColor: BORDER,
     borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12,
@@ -337,7 +338,6 @@ const styles = StyleSheet.create({
   dropdownItemActive: { backgroundColor: GREEN_LIGHT },
   dropdownItemText:   { fontSize: 14, color: TEXT },
 
-  // Image
   imagePicker: {
     backgroundColor: WHITE, borderWidth: 1.5, borderColor: BORDER,
     borderStyle: 'dashed', borderRadius: 12,
@@ -346,7 +346,6 @@ const styles = StyleSheet.create({
   imageIcon: { fontSize: 28, color: TEXT_MUTED },
   imageText: { fontSize: 14, color: TEXT_MUTED },
 
-  // Submit
   submitBtn:         { backgroundColor: GREEN, borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 24 },
   submitBtnDisabled: { backgroundColor: '#A7D9C3' },
   submitText:        { color: WHITE, fontSize: 16, fontWeight: '700' },
