@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {View, Text, TextInput, TouchableOpacity,StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StatusBar} from 'react-native'
-import { Link, router } from 'expo-router'
+import { Link, router, useLocalSearchParams } from 'expo-router'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
 
@@ -10,11 +10,12 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('')
   const [confirm, setConfirm]   = useState('')
   const { signUp, loading, error } = useAuth()
+  const { type } = useLocalSearchParams<{ type: 'sportif' | 'coach' | 'club' }>()
 
   const handleRegister = async () => {
     if (password !== confirm) return alert('Les mots de passe ne correspondent pas')
-    const signUp_sucess = await signUp(email, password)
-    if (signUp_sucess) router.replace('/(tabs)')
+    const signUp_sucess = await signUp(email, password, type || 'sportif')
+    if (signUp_sucess) router.replace('/(onboarding)/sports')
   }
 
   return (

@@ -64,12 +64,12 @@
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
+    "@types/jest": "^29.5.12",
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
-    "jest": "^30.5.0",
-    "jest-expo": "^57.0.5",
+    "jest": "~29.7.0",
+    "jest-expo": "~54.0.12",
     "typescript": "~5.9.2"
   },
   "private": true

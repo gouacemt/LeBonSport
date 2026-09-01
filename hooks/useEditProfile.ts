@@ -42,7 +42,7 @@ export function useEditProfile() {
       return false
     }
 
-    const { type_profil } = data.is_sportif !== null ? data.is_sportif : data.is_coach !== null ? data.is_coach : data.is_club !== null ? data.is_club :' '
+    const type_profil = data.is_sportif ? 'sportif' : data.is_coach ? 'coach' : data.is_club ? 'club' : ''
 
     if (data !== null) {
       // Pré-remplit le formulaire avec les données existantes
