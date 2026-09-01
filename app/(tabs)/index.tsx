@@ -1,856 +1,445 @@
 import Header from "@/components/Header";
-import { Card } from "@/components/ui/Card";
-import { IconSymbol } from "@/components/ui/icon-symbol";
+import { IconSymbol, IconSymbolName } from "@/components/ui/icon-symbol";
 import { PressableScale } from "@/components/ui/PressableScale";
-import { SectionHeader } from "@/components/ui/SectionHeader";
-import { Skeleton, SkeletonRow } from "@/components/ui/Skeleton";
-import { Spacing } from "@/constants/theme";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { getSportIcon } from "@/constants/sportIcons";
-import { useNearbyAthletes } from "@/hooks/useNearbyAthletes";
+import { Radius, Spacing } from "@/constants/theme";
 import { usePlatformStats } from "@/hooks/usePlatformStats";
-import { usePopularClubs } from "@/hooks/usePopularClubs";
-import { useRecommendations } from "@/hooks/useRecommendations";
 import { useSports } from "@/hooks/useSports";
-import { useTestimonials } from "@/hooks/useTestimonials";
-import { useUpcomingEvents } from "@/hooks/useUpcomingEvents";
+import { useTheme } from "@/hooks/useTheme";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import {
   Animated,
-  Dimensions,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 
-const { width } = Dimensions.get("window");
+const isWeb = Platform.OS === "web";
 
-const HOW_IT_WORKS = [
+const STEPS = [
   {
-    title: "Trouvez facilement",
-    desc: "Recherchez par sport, niveau et localisation",
-    color: "#E8F5F0",
-    iconColor: "#1A8C5B",
+    n: "1",
+    title: "Choisissez votre sport",
+    desc: "Sélectionnez vos sports et votre niveau pour un fil d'annonces adapté.",
   },
   {
-    title: "Complétez votre équipe",
-    desc: "Il vous manque un joueur ? Publiez une annonce",
-    color: "#EAF0FF",
-    iconColor: "#3B5BDB",
+    n: "2",
+    title: "Publiez ou répondez",
+    desc: "Déposez une annonce en 2 minutes, ou contactez celles qui vous intéressent.",
   },
   {
-    title: "Rejoignez un club",
-    desc: "Trouvez le club parfait près de chez vous",
-    color: "#F5EAF5",
-    iconColor: "#9B59B6",
-  },
-  {
-    title: "Parties spontanées",
-    desc: "Organisez ou rejoignez une partie rapidement",
-    color: "#FFF8E1",
-    iconColor: "#F39C12",
+    n: "3",
+    title: "Retrouvez-vous sur le terrain",
+    desc: "Échangez par messagerie, fixez un créneau et jouez ensemble.",
   },
 ];
 
-function useAnimatedValue(initialValue: number) {
-  return useRef(new Animated.Value(initialValue)).current;
-}
+const FEATURES: { icon: IconSymbolName; title: string; desc: string }[] = [
+  { icon: "person.fill", title: "Compléter une équipe", desc: "Trouvez les joueurs qu'il vous manque pour votre match." },
+  { icon: "trophy.fill", title: "Rejoindre un club", desc: "Découvrez les clubs qui recrutent près de chez vous." },
+  { icon: "calendar", title: "Organiser une partie", desc: "Lancez une partie ouverte et remplissez les places libres." },
+  { icon: "bubble.left.fill", title: "Discuter en direct", desc: "Une messagerie intégrée pour convenir des détails." },
+];
+
+const FOOTER_COLUMNS = [
+  {
+    title: "Découvrir",
+    links: [
+      { label: "Les annonces", href: "/(tabs)/explore" },
+      { label: "La carte", href: "/(tabs)/map" },
+      { label: "Publier une annonce", href: "/create-annonce" },
+    ],
+  },
+  {
+    title: "Mon compte",
+    links: [
+      { label: "Mon profil", href: "/(tabs)/profile" },
+      { label: "Mes annonces", href: "/(tabs)/mes-annonces" },
+      { label: "Messages", href: "/(tabs)/messages" },
+    ],
+  },
+  {
+    title: "Aide",
+    links: [
+      { label: "Centre d'aide", href: "/(profile)/aide" },
+      { label: "Confidentialité", href: "/(profile)/confidentialite" },
+    ],
+  },
+];
 
 export default function HomeScreen() {
   const router = useRouter();
-
+  const { colors } = useTheme();
   const scrollY = useRef(new Animated.Value(0)).current;
+  const scrollRef = useRef<any>(null);
+  const scrollToTop = () => scrollRef.current?.scrollTo?.({ y: 0, animated: true });
 
   const { sports } = useSports();
-  const platformStats = usePlatformStats();
-  const recommendations = useRecommendations();
-  const popularClubs = usePopularClubs();
-  const upcomingEvents = useUpcomingEvents();
-  const nearbyAthletes = useNearbyAthletes();
-  const testimonials = useTestimonials();
-
-  const heroOpacity = useAnimatedValue(0);
-  const heroTranslate = useAnimatedValue(30);
-  const badgeOpacity = useAnimatedValue(0);
-  const badgeTranslate = useAnimatedValue(-10);
-  const btnScale = useAnimatedValue(0.9);
-  const sportsOpacity = useAnimatedValue(0);
-  const howOpacity = useAnimatedValue(0);
-  const ctaOpacity = useAnimatedValue(0);
-  const ctaTranslate = useAnimatedValue(40);
-
-  useEffect(() => {
-    Animated.sequence([
-      Animated.parallel([
-        Animated.timing(badgeOpacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.spring(badgeTranslate, {
-          toValue: 0,
-          tension: 80,
-          friction: 8,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.parallel([
-        Animated.timing(heroOpacity, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.spring(heroTranslate, {
-          toValue: 0,
-          tension: 60,
-          friction: 8,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.spring(btnScale, {
-        toValue: 1,
-        tension: 80,
-        friction: 6,
-        useNativeDriver: true,
-      }),
-      Animated.parallel([
-        Animated.timing(sportsOpacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(howOpacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(ctaOpacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.spring(ctaTranslate, {
-          toValue: 0,
-          tension: 60,
-          friction: 8,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-  }, []);
+  const stats = usePlatformStats();
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
       <Header scrollY={scrollY} />
 
       <Animated.ScrollView
-        style={styles.container}
+        ref={scrollRef}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false },
-        )}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+          useNativeDriver: false,
+        })}
         scrollEventThrottle={16}
       >
+        {/* ── Hero ── */}
         <LinearGradient
-          colors={["#2ECC8F", "#1AAD6E", "#0D8A52"]}
+          colors={[colors.primary, colors.primaryDark]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.hero}
         >
-          <Animated.View
-            style={[
-              styles.badge,
-              {
-                opacity: badgeOpacity,
-                transform: [{ translateY: badgeTranslate }],
-              },
-            ]}
-          >
-            <Text style={styles.badgeText}>
-              ✦ La communauté sportive qui vous connecte
-            </Text>
-          </Animated.View>
-
-          <Animated.View
-            style={{
-              opacity: heroOpacity,
-              transform: [{ translateY: heroTranslate }],
-            }}
-          >
-            <Text style={styles.heroTitle}>Trouvez vos partenaires</Text>
-            <Text style={styles.heroTitleAccent}>de sport idéaux</Text>
+          <View style={styles.heroInner}>
+            <Text style={styles.heroTitle}>Le sport, ensemble.</Text>
             <Text style={styles.heroSubtitle}>
-              Que vous cherchiez un club, une équipe ou des joueurs pour
-              compléter votre partie, LeBonSport vous connecte avec la
-              communauté sportive près de chez vous.
+              LeBonSport met en relation les sportifs, les équipes et les clubs.
+              Trouvez un partenaire, complétez votre équipe ou rejoignez un club
+              près de chez vous.
             </Text>
-          </Animated.View>
 
-          <Animated.View
-            style={[
-              styles.heroBtns,
-              { opacity: btnScale, transform: [{ scale: btnScale }] },
-            ]}
-          >
-            <TouchableOpacity
-              style={styles.btnPrimary}
-              onPress={() => router.push("/(tabs)/explore")}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.btnPrimaryText}>
-                Explorer les annonces
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.btnSecondary}
-              onPress={() => router.push("/create-annonce")}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.btnSecondaryText}>
-                 Publier une annonce
-              </Text>
-            </TouchableOpacity>
-          </Animated.View>
+            <View style={styles.heroButtons}>
+              <PressableScale
+                style={[styles.btn, styles.btnLight]}
+                onPress={() => router.push("/(tabs)/explore")}
+              >
+                <Text style={[styles.btnLightText, { color: colors.primaryDark }]}>
+                  Explorer les annonces
+                </Text>
+              </PressableScale>
+              <PressableScale
+                style={[styles.btn, styles.btnOutline]}
+                onPress={() => router.push("/create-annonce")}
+              >
+                <Text style={styles.btnOutlineText}>Publier une annonce</Text>
+              </PressableScale>
+            </View>
 
-          <View style={styles.wave} />
+            <View style={styles.heroStats}>
+              {stats.loading ? (
+                <Skeleton width={220} height={16} />
+              ) : (
+                <Text style={styles.heroStatsText}>
+                  <Text style={styles.heroStatsNum}>{stats.membersCount}</Text> membres
+                  {"   ·   "}
+                  <Text style={styles.heroStatsNum}>{stats.annoncesCount}</Text> annonces
+                  {"   ·   "}
+                  <Text style={styles.heroStatsNum}>{sports.length}</Text> sports
+                </Text>
+              )}
+            </View>
+          </View>
         </LinearGradient>
 
-        {sports.length > 0 && (
-          <Animated.View style={{ opacity: sportsOpacity }}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.sportsScroll}
-            >
-              {sports.map((sport) => (
-                <PressableScale
-                  key={sport.id}
-                  style={styles.sportChip}
-                  onPress={() => router.push(`/(tabs)/explore?sport=${encodeURIComponent(sport.nom)}` as any)}
-                >
-                  <IconSymbol name={getSportIcon(sport.nom)} size={26} color="#16A06A" />
-                  <Text style={styles.sportLabel}>{sport.nom}</Text>
-                </PressableScale>
+        {/* ── Comment ça marche ── */}
+        <View style={styles.section}>
+          <View style={styles.sectionInner}>
+            <Text style={[styles.kicker, { color: colors.primary }]}>COMMENT ÇA MARCHE</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{"Trois étapes, c'est tout"}</Text>
+            <View style={styles.steps}>
+              {STEPS.map((step) => (
+                <View key={step.n} style={styles.step}>
+                  <View style={[styles.stepNum, { backgroundColor: colors.primaryLight }]}>
+                    <Text style={[styles.stepNumText, { color: colors.primaryDark }]}>{step.n}</Text>
+                  </View>
+                  <Text style={[styles.stepTitle, { color: colors.text }]}>{step.title}</Text>
+                  <Text style={[styles.stepDesc, { color: colors.textMuted }]}>{step.desc}</Text>
+                </View>
               ))}
-            </ScrollView>
-          </Animated.View>
-        )}
-
-        <View style={styles.statsBanner}>
-          {platformStats.loading ? (
-            <>
-              <Skeleton width={70} height={32} />
-              <Skeleton width={70} height={32} />
-              <Skeleton width={70} height={32} />
-            </>
-          ) : (
-            <>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{platformStats.annoncesCount}</Text>
-                <Text style={styles.statLabel}>Annonces</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{platformStats.membersCount}</Text>
-                <Text style={styles.statLabel}>Membres</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{sports.length}</Text>
-                <Text style={styles.statLabel}>Sports</Text>
-              </View>
-            </>
-          )}
+            </View>
+          </View>
         </View>
 
-        {(recommendations.loading || recommendations.data.length > 0) && (
+        {/* ── Fonctionnalités ── */}
+        <View style={[styles.section, { backgroundColor: colors.surface }]}>
+          <View style={styles.sectionInner}>
+            <Text style={[styles.kicker, { color: colors.primary }]}>CE QUE VOUS POUVEZ FAIRE</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Une appli, plusieurs usages</Text>
+            <View style={styles.featGrid}>
+              {FEATURES.map((f) => (
+                <View
+                  key={f.title}
+                  style={[styles.featCard, { backgroundColor: colors.background, borderColor: colors.border }]}
+                >
+                  <View style={[styles.featIcon, { backgroundColor: colors.primaryLight }]}>
+                    <IconSymbol name={f.icon} size={20} color={colors.primaryDark} />
+                  </View>
+                  <Text style={[styles.featTitle, { color: colors.text }]}>{f.title}</Text>
+                  <Text style={[styles.featDesc, { color: colors.textMuted }]}>{f.desc}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {/* ── Sports ── */}
+        {sports.length > 0 && (
           <View style={styles.section}>
-            <SectionHeader
-              title="Recommandé pour vous"
-              subtitle="Selon les sports que vous pratiquez"
-              ctaLabel="Voir tout"
-              onCta={() => router.push("/(tabs)/explore")}
-            />
-            {recommendations.loading ? (
-              <View style={{ gap: Spacing.sm }}>
-                <SkeletonRow /><SkeletonRow /><SkeletonRow />
-              </View>
-            ) : (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.md }}>
-                {recommendations.data.map((a) => (
-                  <PressableScale key={a.id} onPress={() => router.push(`/annonce/${a.id}` as any)}>
-                    <Card style={styles.teaserCard}>
-                      <View style={styles.iconCircle}>
-                        <IconSymbol name={getSportIcon(a.sport)} size={22} color="#0D8A52" />
-                      </View>
-                      <Text style={styles.teaserTitle} numberOfLines={2}>{a.titre}</Text>
-                      <View style={styles.metaRow}>
-                        <View style={styles.metaChip}>
-                          <Text style={styles.metaChipText}>{a.sport}</Text>
-                        </View>
-                        <View style={styles.inlineIconText}>
-                          <IconSymbol name="mappin.and.ellipse" size={12} color="#5A7366" />
-                          <Text style={styles.teaserSub}>{a.ville}</Text>
-                        </View>
-                      </View>
-                    </Card>
+            <View style={styles.sectionInner}>
+              <Text style={[styles.kicker, { color: colors.primary }]}>PAR SPORT</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Parcourez par discipline</Text>
+              <View style={styles.chips}>
+                {sports.map((sport) => (
+                  <PressableScale
+                    key={sport.id}
+                    style={[styles.chip, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                    onPress={() =>
+                      router.push(`/(tabs)/explore?sport=${encodeURIComponent(sport.nom)}` as any)
+                    }
+                  >
+                    <IconSymbol name={getSportIcon(sport.nom)} size={18} color={colors.primary} />
+                    <Text style={[styles.chipLabel, { color: colors.text }]}>{sport.nom}</Text>
                   </PressableScale>
                 ))}
-              </ScrollView>
-            )}
+              </View>
+            </View>
           </View>
         )}
 
+        {/* ── CTA ── */}
         <View style={styles.section}>
-          <SectionHeader title="Clubs populaires" subtitle="Les clubs qui recrutent près de chez vous" />
-          {popularClubs.loading ? (
-            <View style={{ gap: Spacing.sm }}><SkeletonRow /><SkeletonRow /></View>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.md }}>
-              {popularClubs.data.map((club) => (
-                <PressableScale key={club.id} onPress={() => router.push("/(tabs)/explore")}>
-                  <Card style={styles.teaserCard}>
-                    <View style={styles.iconCircle}>
-                      <IconSymbol name={club.icon} size={22} color="#0D8A52" />
-                    </View>
-                    <Text style={styles.teaserTitle} numberOfLines={1}>{club.nom}</Text>
-                    <View style={styles.inlineIconText}>
-                      <IconSymbol name="mappin.and.ellipse" size={12} color="#5A7366" />
-                      <Text style={styles.teaserSub}>{club.ville}</Text>
-                    </View>
-                    <View style={styles.metaRow}>
-                      <View style={styles.metaChip}>
-                        <Text style={styles.metaChipText}>{club.membres} membres</Text>
-                      </View>
-                    </View>
-                  </Card>
-                </PressableScale>
-              ))}
-            </ScrollView>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <SectionHeader title="Événements à venir" subtitle="Compétitions et rencontres organisées" />
-          {upcomingEvents.loading ? (
-            <View style={{ gap: Spacing.sm }}><SkeletonRow /><SkeletonRow /></View>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.md }}>
-              {upcomingEvents.data.map((event) => (
-                <PressableScale key={event.id} onPress={() => router.push("/(tabs)/explore")}>
-                  <Card style={styles.teaserCard}>
-                    <View style={styles.iconCircle}>
-                      <IconSymbol name={event.icon} size={22} color="#0D8A52" />
-                    </View>
-                    <Text style={styles.teaserTitle} numberOfLines={2}>{event.titre}</Text>
-                    <View style={styles.inlineIconText}>
-                      <IconSymbol name="mappin.and.ellipse" size={12} color="#5A7366" />
-                      <Text style={styles.teaserSub}>{event.ville}</Text>
-                    </View>
-                    <View style={styles.metaRow}>
-                      <View style={[styles.metaChip, styles.metaChipIconRow]}>
-                        <IconSymbol name="calendar" size={11} color="#0D8A52" />
-                        <Text style={styles.metaChipText}>{event.date}</Text>
-                      </View>
-                    </View>
-                  </Card>
-                </PressableScale>
-              ))}
-            </ScrollView>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <SectionHeader title="Athlètes près de chez vous" subtitle="D'autres sportifs de votre région" />
-          {nearbyAthletes.loading ? (
-            <View style={{ gap: Spacing.sm }}><SkeletonRow /><SkeletonRow /></View>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.md }}>
-              {nearbyAthletes.data.map((athlete) => (
-                <Card key={athlete.id} style={styles.teaserCard}>
-                  <View style={styles.avatarCircle}>
-                    <Text style={styles.avatarCircleText}>{athlete.prenom[0]}</Text>
-                  </View>
-                  <Text style={styles.teaserTitle}>{athlete.prenom}</Text>
-                  <View style={styles.inlineIconText}>
-                    <IconSymbol name="mappin.and.ellipse" size={12} color="#5A7366" />
-                    <Text style={styles.teaserSub}>{athlete.ville}</Text>
-                  </View>
-                  <View style={styles.metaRow}>
-                    <View style={styles.metaChip}>
-                      <Text style={styles.metaChipText}>{athlete.sport}</Text>
-                    </View>
-                    <View style={[styles.metaChip, styles.metaChipOutline]}>
-                      <Text style={[styles.metaChipText, styles.metaChipTextOutline]}>{athlete.niveau}</Text>
-                    </View>
-                  </View>
-                </Card>
-              ))}
-            </ScrollView>
-          )}
-        </View>
-
-        <View style={styles.section}>
-          <SectionHeader title="Ils utilisent LeBonSport" />
-          {testimonials.loading ? (
-            <View style={{ gap: Spacing.sm }}><SkeletonRow /><SkeletonRow /></View>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: Spacing.md }}>
-              {testimonials.data.map((t) => (
-                <Card key={t.id} style={[styles.teaserCard, styles.testimonialCard]}>
-                  <View style={styles.stars}>
-                    {Array.from({ length: t.note }).map((_, i) => (
-                      <IconSymbol key={i} name="star.fill" size={13} color="#F39C12" />
-                    ))}
-                  </View>
-                  <Text style={styles.testimonialText} numberOfLines={4}>"{t.texte}"</Text>
-                  <View style={styles.testimonialFooter}>
-                    <View style={styles.avatarCircleSm}>
-                      <Text style={styles.avatarCircleSmText}>{t.nom[0]}</Text>
-                    </View>
-                    <Text style={styles.testimonialName}>{t.nom}</Text>
-                  </View>
-                </Card>
-              ))}
-            </ScrollView>
-          )}
-        </View>
-
-        <Animated.View style={[styles.section, { opacity: howOpacity }]}>
-          <Text style={styles.sectionTitle}>Comment ça marche ?</Text>
-          <Text style={styles.sectionSubtitle}>
-            LeBonSport facilite la mise en relation entre sportifs, équipes et
-            clubs
-          </Text>
-
-          <View style={styles.howGrid}>
-            {HOW_IT_WORKS.map((item, i) => (
-              <HowCard key={i} item={item} index={i} />
-            ))}
+          <View style={styles.sectionInner}>
+            <View style={[styles.cta, { backgroundColor: colors.primary }]}>
+              <Text style={styles.ctaTitle}>Prêt à trouver votre équipe ?</Text>
+              <Text style={styles.ctaText}>
+                Rejoignez la communauté et publiez votre première annonce dès maintenant.
+              </Text>
+              <PressableScale style={styles.ctaButton} onPress={() => router.push("/create-annonce")}>
+                <Text style={[styles.ctaButtonText, { color: colors.primaryDark }]}>
+                  Publier une annonce
+                </Text>
+              </PressableScale>
+            </View>
           </View>
-        </Animated.View>
+        </View>
 
-        <Animated.View
-          style={{
-            opacity: ctaOpacity,
-            transform: [{ translateY: ctaTranslate }],
-          }}
+        {/* ── Footer ── */}
+        <LinearGradient
+          colors={["#123329", "#0B1913"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.footer}
         >
           <LinearGradient
-            colors={["#0D8A52", "#16A06A", "#2ECC8F"]}
+            colors={[colors.gradientStart, colors.primary]}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.ctaBox}
-          >
-            <View style={styles.ctaContent}>
-              <View style={styles.ctaLeft}>
-                <Text style={styles.ctaTitle}>
-                  Prêt à trouver votre prochain partenaire ?
-                </Text>
-                <Text style={styles.ctaDesc}>
-                  Rejoignez la communauté LeBonSport et connectez-vous avec des
-                  sportifs qui partagent votre passion.
-                </Text>
-              </View>
-              <View style={styles.ctaButtons}>
-                <TouchableOpacity
-                  style={styles.ctaBtnGreen}
-                  onPress={() => router.push("/create-annonce")}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.ctaBtnGreenText}>Créer une annonce</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.ctaBtnDark}
-                  onPress={() => router.push("/(tabs)/explore")}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.ctaBtnDarkText}>
-                    Explorer les annonces
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </LinearGradient>
-        </Animated.View>
+            end={{ x: 1, y: 0 }}
+            style={styles.footerAccent}
+          />
 
-        <View style={styles.footer}>
-          <View style={styles.footerLogo}>
-            <View style={styles.footerLogoIcon}>
-              <Text style={styles.footerLogoText}>S</Text>
+          <View style={styles.footerInner}>
+            <View style={styles.footerTop}>
+              <View style={styles.footerBrand}>
+                <View style={styles.footerLogoRow}>
+                  <View style={[styles.footerLogoMark, { backgroundColor: colors.primary }]}>
+                    <Text style={styles.footerLogoMarkText}>S</Text>
+                  </View>
+                  <Text style={styles.footerLogoText}>LeBonSport</Text>
+                </View>
+                <Text style={styles.footerTagline}>
+                  La communauté sportive qui vous connecte aux clubs, équipes et joueurs près de chez vous.
+                </Text>
+                <PressableScale
+                  style={[styles.footerCta, { borderColor: colors.gradientStart }]}
+                  onPress={() => router.push("/create-annonce")}
+                >
+                  <IconSymbol name="plus.circle.fill" size={16} color={colors.gradientStart} />
+                  <Text style={[styles.footerCtaText, { color: colors.gradientStart }]}>
+                    Publier une annonce
+                  </Text>
+                </PressableScale>
+              </View>
+
+              <View style={styles.footerCols}>
+                {FOOTER_COLUMNS.map((col) => (
+                  <View key={col.title} style={styles.footerCol}>
+                    <Text style={styles.footerColTitle}>{col.title}</Text>
+                    {col.links.map((link) => (
+                      <TouchableOpacity
+                        key={link.label}
+                        onPress={() => router.push(link.href as any)}
+                        activeOpacity={0.6}
+                        style={styles.footerLinkRow}
+                      >
+                        <Text style={styles.footerLink}>{link.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ))}
+              </View>
             </View>
-            <Text style={styles.footerBrand}>LeBonSport</Text>
+
+            <View style={styles.footerDivider} />
+
+            <View style={styles.footerBottom}>
+              <Text style={styles.footerCopy}>
+                © {new Date().getFullYear()} LeBonSport · Fait en France 🇫🇷
+              </Text>
+              <View style={styles.footerBottomLinks}>
+                <TouchableOpacity onPress={() => router.push("/(profile)/confidentialite")} activeOpacity={0.6}>
+                  <Text style={styles.footerBottomLink}>Confidentialité</Text>
+                </TouchableOpacity>
+                <Text style={styles.footerDot}>·</Text>
+                <TouchableOpacity onPress={() => router.push("/(profile)/aide")} activeOpacity={0.6}>
+                  <Text style={styles.footerBottomLink}>Aide</Text>
+                </TouchableOpacity>
+                <Text style={styles.footerDot}>·</Text>
+                <TouchableOpacity onPress={scrollToTop} activeOpacity={0.6} style={styles.footerTopBtn}>
+                  <Text style={styles.footerBottomLink}>Haut de page</Text>
+                  <IconSymbol name="chevron.right" size={13} color="rgba(255,255,255,0.6)" style={styles.footerTopBtnIcon} />
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
-          <Text style={styles.footerCopy}>
-            © 2025 LeBonSport. Tous droits réservés.
-          </Text>
-        </View>
+        </LinearGradient>
       </Animated.ScrollView>
     </View>
   );
 }
 
-function HowCard({
-  item,
-  index,
-}: {
-  item: (typeof HOW_IT_WORKS)[0];
-  index: number;
-}) {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  const onPressIn = () =>
-    Animated.spring(scale, { toValue: 0.96, useNativeDriver: true }).start();
-  const onPressOut = () =>
-    Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
-
-  return (
-    <Animated.View style={[styles.howCard, { transform: [{ scale }] }]}>
-      <TouchableOpacity
-        onPressIn={onPressIn}
-        onPressOut={onPressOut}
-        activeOpacity={1}
-      >
-        <Text style={styles.howTitle}>{item.title}</Text>
-        <Text style={styles.howDesc}>{item.desc}</Text>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-}
-
-const isWeb = Platform.OS === "web";
+const CONTENT_MAX = 1040;
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: "#F8FAF9",
-  },
+  root: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: { paddingBottom: 0 },
 
-  container: {
-    flex: 1,
-    backgroundColor: "#F8FAF9",
-  },
-
-  hero: {
-    paddingTop: 60,
-    paddingBottom: 60,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    position: "relative",
-    overflow: "hidden",
-  },
-  badge: {
-    backgroundColor: "rgba(255,255,255,0.18)",
-    borderColor: "rgba(255,255,255,0.35)",
-    borderWidth: 1,
-    borderRadius: 50,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginBottom: 24,
-  },
-  badgeText: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "500",
-    letterSpacing: 0.3,
-  },
+  hero: { paddingTop: isWeb ? 110 : 130, paddingBottom: Spacing.xl + 16, paddingHorizontal: Spacing.lg },
+  heroInner: { width: "100%", maxWidth: CONTENT_MAX, alignSelf: "center" },
   heroTitle: {
     color: "#fff",
-    fontSize: isWeb ? 48 : 32,
+    fontSize: isWeb ? 40 : 30,
     fontWeight: "800",
-    textAlign: "center",
-    lineHeight: isWeb ? 58 : 40,
-  },
-  heroTitleAccent: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: isWeb ? 48 : 32,
-    fontWeight: "800",
-    textAlign: "center",
-    lineHeight: isWeb ? 58 : 40,
-    marginBottom: 20,
+    letterSpacing: -0.6,
+    lineHeight: isWeb ? 46 : 36,
   },
   heroSubtitle: {
-    color: "rgba(255,255,255,0.85)",
-    fontSize: 16,
-    textAlign: "center",
-    lineHeight: 24,
-    maxWidth: 520,
-    marginBottom: 36,
-  },
-  heroBtns: {
-    flexDirection: isWeb ? "row" : "column",
-    gap: 12,
-    width: "100%",
-    maxWidth: 520,
-    alignItems: "center",
-  },
-  btnPrimary: {
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 28,
-    flex: isWeb ? 1 : undefined,
-    width: isWeb ? undefined : "100%",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  btnPrimaryText: {
-    color: "#0D7A4F",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  btnSecondary: {
-    backgroundColor: "rgba(255,255,255,0.15)",
-    borderColor: "rgba(255,255,255,0.5)",
-    borderWidth: 1.5,
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 28,
-    flex: isWeb ? 1 : undefined,
-    width: isWeb ? undefined : "100%",
-    alignItems: "center",
-  },
-  btnSecondaryText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  wave: {
-    position: "absolute",
-    bottom: -2,
-    left: -20,
-    right: -20,
-    height: 40,
-    backgroundColor: "#F8FAF9",
-    borderTopLeftRadius: 999,
-    borderTopRightRadius: 999,
-  },
-
-  sportsScroll: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    gap: 10,
-    justifyContent: "center",
-  },
-  sportChip: {
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    flexGrow: 1,
-    flexDirection: "column",
-    gap: 8,
-    borderWidth: 1,
-    borderColor: "#E8EDE9",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  sportLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#1A2E22",
-    textAlign: "center",
-  },
-
-  statsBanner: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    marginHorizontal: 16,
-    marginTop: 8,
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#E8EDE9",
-  },
-  statItem: { alignItems: "center" },
-  statValue: { fontSize: 24, fontWeight: "800", color: "#0F1F17" },
-  statLabel: { fontSize: 12, color: "#5A7366", marginTop: 2 },
-
-  teaserCard: {
-    width: 210,
-    minHeight: 168,
-    padding: 16,
-  },
-  teaserTitle: { fontSize: 15, fontWeight: "700", color: "#0F1F17", marginBottom: 4 },
-  teaserSub: { fontSize: 12, color: "#5A7366", lineHeight: 17 },
-  inlineIconText: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 },
-
-  iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: "#E8F5F0",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-
-  avatarCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#E8F5F0",
-    borderWidth: 1.5,
-    borderColor: "#16A06A",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-  avatarCircleText: { fontSize: 17, fontWeight: "700", color: "#0D8A52" },
-
-  avatarCircleSm: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: "#E8F5F0",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarCircleSmText: { fontSize: 11, fontWeight: "700", color: "#0D8A52" },
-
-  metaRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: "auto" },
-  metaChip: {
-    backgroundColor: "#F0FBF5",
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-  },
-  metaChipText: { fontSize: 11, fontWeight: "600", color: "#0D8A52" },
-  metaChipIconRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  metaChipOutline: { backgroundColor: "transparent", borderWidth: 1, borderColor: "#E8EDE9" },
-  metaChipTextOutline: { color: "#5A7366" },
-
-  testimonialCard: { minHeight: 160, justifyContent: "space-between" },
-  stars: { flexDirection: "row", gap: 2, marginBottom: 8 },
-  testimonialText: { fontSize: 13, color: "#3D5348", lineHeight: 19, fontStyle: "italic" },
-  testimonialFooter: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12 },
-  testimonialName: { fontSize: 12, fontWeight: "700", color: "#0F1F17" },
-
-  section: {
-    paddingHorizontal: 20,
-    paddingVertical: 32,
-  },
-  sectionTitle: {
-    fontSize: isWeb ? 34 : 26,
-    fontWeight: "800",
-    color: "#0F1F17",
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  sectionSubtitle: {
+    color: "rgba(255,255,255,0.9)",
     fontSize: 15,
-    color: "#5A7366",
-    textAlign: "center",
-    marginBottom: 32,
     lineHeight: 22,
+    marginTop: Spacing.md,
+    maxWidth: 560,
   },
-  howGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 14,
-    justifyContent: "center",
-  },
-  howCard: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 20,
-    width: isWeb ? 200 : (width - 54) / 2,
-    borderWidth: 1,
-    borderColor: "#E8EDE9",
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  howIconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 14,
-  },
-  howIcon: { fontSize: 26 },
-  howTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#0F1F17",
-    marginBottom: 6,
-  },
-  howDesc: { fontSize: 13, color: "#5A7366", lineHeight: 19 },
+  heroButtons: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm, marginTop: Spacing.lg },
+  btn: { paddingHorizontal: 20, paddingVertical: 13, borderRadius: Radius.md },
+  btnLight: { backgroundColor: "#fff" },
+  btnLightText: { fontWeight: "800", fontSize: 14 },
+  btnOutline: { borderWidth: 1.5, borderColor: "rgba(255,255,255,0.6)" },
+  btnOutlineText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+  heroStats: { marginTop: Spacing.lg },
+  heroStatsText: { color: "rgba(255,255,255,0.85)", fontSize: 13 },
+  heroStatsNum: { color: "#fff", fontWeight: "800" },
 
-  ctaBox: {
-    margin: 16,
-    borderRadius: 20,
-    overflow: "hidden",
-  },
-  ctaContent: {
-    padding: 28,
-    flexDirection: isWeb ? "row" : "column",
-    alignItems: isWeb ? "center" : "flex-start",
-    gap: 24,
-  },
-  ctaLeft: { flex: isWeb ? 1 : undefined },
-  ctaTitle: {
-    color: "#fff",
-    fontSize: isWeb ? 26 : 22,
-    fontWeight: "800",
-    marginBottom: 10,
-    lineHeight: 32,
-  },
-  ctaDesc: { color: "rgba(255,255,255,0.72)", fontSize: 14, lineHeight: 21 },
-  ctaButtons: { gap: 10, width: isWeb ? undefined : "100%" },
-  ctaBtnGreen: {
-    backgroundColor: "#16A06A",
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 22,
-    alignItems: "center",
-  },
-  ctaBtnGreenText: { color: "#fff", fontWeight: "700", fontSize: 15 },
-  ctaBtnDark: {
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderColor: "rgba(255,255,255,0.25)",
+  section: { paddingVertical: Spacing.xl + 8, paddingHorizontal: Spacing.lg },
+  sectionInner: { width: "100%", maxWidth: CONTENT_MAX, alignSelf: "center" },
+  kicker: { fontSize: 12, fontWeight: "800", letterSpacing: 1 },
+  sectionTitle: { fontSize: isWeb ? 26 : 22, fontWeight: "800", letterSpacing: -0.3, marginTop: 6, marginBottom: Spacing.lg },
+
+  steps: { flexDirection: isWeb ? "row" : "column", gap: Spacing.lg },
+  step: { flex: isWeb ? 1 : undefined },
+  stepNum: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center", marginBottom: 10 },
+  stepNumText: { fontSize: 17, fontWeight: "800" },
+  stepTitle: { fontSize: 16, fontWeight: "700", marginBottom: 4 },
+  stepDesc: { fontSize: 14, lineHeight: 20 },
+
+  featGrid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.md },
+  featCard: {
+    width: isWeb ? "47%" : "100%",
+    flexGrow: 1,
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
     borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 22,
-    alignItems: "center",
   },
-  ctaBtnDarkText: { color: "#fff", fontWeight: "600", fontSize: 15 },
+  featIcon: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center", marginBottom: 12 },
+  featTitle: { fontSize: 15, fontWeight: "700", marginBottom: 4 },
+  featDesc: { fontSize: 13, lineHeight: 19 },
+
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
+  },
+  chipLabel: { fontSize: 13, fontWeight: "600" },
+
+  cta: { borderRadius: Radius.lg, padding: Spacing.lg },
+  ctaTitle: { color: "#fff", fontSize: 19, fontWeight: "800" },
+  ctaText: { color: "rgba(255,255,255,0.9)", fontSize: 14, lineHeight: 20, marginTop: 6, marginBottom: Spacing.md, maxWidth: 460 },
+  ctaButton: { backgroundColor: "#fff", alignSelf: "flex-start", paddingHorizontal: 20, paddingVertical: 12, borderRadius: Radius.md },
+  ctaButtonText: { fontWeight: "800", fontSize: 14 },
 
   footer: {
-    paddingHorizontal: 20,
-    paddingVertical: 24,
+    paddingTop: Spacing.xl + 6,
+    paddingBottom: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    overflow: "hidden",
+  },
+  footerAccent: { position: "absolute", top: 0, left: 0, right: 0, height: 4 },
+  footerInner: { width: "100%", maxWidth: CONTENT_MAX, alignSelf: "center", gap: Spacing.xl },
+  footerTop: { flexDirection: isWeb ? "row" : "column", justifyContent: "space-between", gap: Spacing.xl },
+  footerBrand: { flex: isWeb ? 1 : undefined, maxWidth: 380, gap: 12 },
+  footerLogoRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  footerLogoMark: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  footerLogoMarkText: { color: "#fff", fontWeight: "800", fontSize: 18 },
+  footerLogoText: { color: "#fff", fontWeight: "800", fontSize: 19, letterSpacing: -0.3 },
+  footerTagline: { color: "rgba(255,255,255,0.55)", fontSize: 13, lineHeight: 20 },
+  footerCta: {
     flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    alignSelf: "flex-start",
+    marginTop: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
+  },
+  footerCtaText: { fontSize: 13, fontWeight: "700" },
+
+  footerCols: { flexDirection: "row", flexWrap: "wrap", gap: 44 },
+  footerCol: { gap: 12, minWidth: 140 },
+  footerColTitle: {
+    color: "#7FE3B6",
+    fontSize: 12,
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    marginBottom: 2,
+  },
+  footerLinkRow: { paddingVertical: 1 },
+  footerLink: { color: "rgba(255,255,255,0.72)", fontSize: 14, lineHeight: 20 },
+
+  footerDivider: { height: 1, backgroundColor: "rgba(255,255,255,0.1)" },
+
+  footerBottom: {
+    flexDirection: isWeb ? "row" : "column",
     justifyContent: "space-between",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: "#E0E8E2",
-    marginTop: 8,
+    alignItems: isWeb ? "center" : "flex-start",
+    gap: Spacing.sm,
   },
-  footerLogo: { flexDirection: "row", alignItems: "center", gap: 8 },
-  footerLogoIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    backgroundColor: "#16A06A",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  footerLogoText: { color: "#fff", fontWeight: "800", fontSize: 15 },
-  footerBrand: { fontWeight: "700", fontSize: 14, color: "#0F1F17" },
-  footerCopy: { fontSize: 12, color: "#8FA898" },
+  footerCopy: { color: "rgba(255,255,255,0.45)", fontSize: 12 },
+  footerBottomLinks: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
+  footerBottomLink: { color: "rgba(255,255,255,0.6)", fontSize: 12 },
+  footerDot: { color: "rgba(255,255,255,0.3)", fontSize: 12 },
+  footerTopBtn: { flexDirection: "row", alignItems: "center", gap: 3 },
+  footerTopBtnIcon: { transform: [{ rotate: "-90deg" }] },
 });

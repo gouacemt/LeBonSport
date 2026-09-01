@@ -172,22 +172,27 @@ export function useEditProfile() {
       return false
     }
 
-    console.log('Sauvegarde pour user:', user.id)  // ← debug
-    console.log('Données à sauvegarder:', form)     // ← debug
+    const payload: Record<string, unknown> = {
+      id:         user.id,
+      nom:        form.nom    !== '' ? form.nom    : null,
+      prenom:     form.prenom !== '' ? form.prenom : null,
+      bio:        form.bio    !== '' ? form.bio    : null,
+      age:        form.age    !== '' ? Number(form.age) : null,
+      updated_at: new Date().toISOString(),
+    }
 
-    const { error, data } = await supabase
+    // Type de compte : on garde le modèle booléen utilisé partout ailleurs
+    // (inscription, useProfile) plutôt qu'une colonne `type` incohérente.
+    // On n'écrit ces champs que si le type est connu, pour ne pas l'écraser.
+    if (form.type === 'sportif' || form.type === 'coach' || form.type === 'club') {
+      payload.is_sportif = form.type === 'sportif'
+      payload.is_coach   = form.type === 'coach'
+      payload.is_club    = form.type === 'club'
+    }
+
+    const { error } = await supabase
       .from('profiles')
-      .upsert({
-        id:         user.id,
-        nom:        form.nom    !== '' ? form.nom    : null,
-        prenom:     form.prenom !== '' ? form.prenom : null,
-        bio:        form.bio    !== '' ? form.bio    : null,
-        age:        form.age    !== '' ? Number(form.age) : null,
-        type:       form.type   !== '' ? form.type : null,
-        updated_at: new Date().toISOString(),
-      }).select()
-
-console.log('Upsert résultat:', { error, data })
+      .upsert(payload)
 
     if (error) {
       setError(error.message)
@@ -195,7 +200,6 @@ console.log('Upsert résultat:', { error, data })
       return false
     }
 
-    console.log('Résultat:', { error, data })  // ← debug
     setSaving(false)
     return true
   }

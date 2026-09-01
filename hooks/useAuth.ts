@@ -99,6 +99,11 @@ export function useAuth() {
           setError(error.message)
           return false
         }
+        // Crée la ligne profiles / notification_settings si c'est une 1re connexion
+        if (user) {
+          await supabase.from('profiles').upsert({ id: user.id }, { onConflict: 'id' })
+          await supabase.from('notification_settings').upsert({ user_id: user.id }, { onConflict: 'user_id' })
+        }
       }
       if (credential.fullName) {
         // Apple only provides the user's full name on the first sign-in

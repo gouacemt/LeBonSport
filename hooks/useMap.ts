@@ -1,121 +1,109 @@
-import { useState, useEffect } from 'react'
-import * as Location from 'expo-location'
 import { supabase } from '@/services/supabase'
+import * as Location from 'expo-location'
+import { useEffect, useState } from 'react'
 
-type Annonce = {
+export type MapAnnonce = {
   id:          string
   titre:       string
   sport:       string
-  niveau:      string
+  niveau:      string | null
   ville:       string
   description: string
-  places:      number
-  latitude:    number
-  longitude:   number
-  user_id:     string
+  places:      number | null
+  user_id:     string | null
+  latitude:    number | null
+  longitude:   number | null
 }
 
-type Region = {
+export type Region = {
   latitude:        number
   longitude:       number
   latitudeDelta:   number
   longitudeDelta:  number
 }
 
-export function useMap() {
-  const [annonces, setAnnonces]         = useState<Annonce[]>([])
-  const [position, setPosition]         = useState<Region | null>(null)
-  const [rayon, setRayon]               = useState(10)  // km par défaut
-  const [loading, setLoading]           = useState(true)
-  const [error, setError]               = useState<string | null>(null)
-  const [annonceSelectee, setAnnonceSelectee] = useState<Annonce | null>(null)
-  const [sportFiltre, setSportFiltre]   = useState<string | null>(null)
+// Repli quand la géolocalisation est indisponible / refusée (centre France, Lyon).
+const DEFAULT_REGION: Region = {
+  latitude: 45.7640,
+  longitude: 4.8357,
+  latitudeDelta: 0.15,
+  longitudeDelta: 0.15,
+}
 
-  useEffect(function() {
-    demanderPermission()
+export function useMap() {
+  const [annonces, setAnnonces]               = useState<MapAnnonce[]>([])
+  const [position, setPosition]               = useState<Region>(DEFAULT_REGION)
+  const [rayon, setRayon]                      = useState(10)
+  const [loading, setLoading]                  = useState(true)
+  const [error, setError]                      = useState<string | null>(null)
+  const [locationDenied, setLocationDenied]    = useState(false)
+  const [annonceSelectee, setAnnonceSelectee]  = useState<MapAnnonce | null>(null)
+  const [sportFiltre, setSportFiltre]          = useState<string | null>(null)
+
+  useEffect(() => {
+    init()
   }, [])
 
-  // ─── Demander la permission de géolocalisation ──────────────
-  const demanderPermission = async () => {
+  const init = async () => {
     setLoading(true)
     setError(null)
 
-    const { status } = await Location.requestForegroundPermissionsAsync()
-
-    if (status !== 'granted') {
-      setError('Permission de géolocalisation refusée')
-      setLoading(false)
-      return false
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync()
+      if (status === 'granted') {
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
+        setPosition({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+          latitudeDelta: 0.08,
+          longitudeDelta: 0.08,
+        })
+      } else {
+        setLocationDenied(true)
+      }
+    } catch {
+      // permission refusée, timeout, navigateur sans géoloc… on garde le repli
+      setLocationDenied(true)
     }
 
-    // Récupère la position actuelle
-    const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced
-    })
-
-    const region: Region = {
-      latitude:       location.coords.latitude,
-      longitude:      location.coords.longitude,
-      latitudeDelta:  0.05,
-      longitudeDelta: 0.05,
-    }
-
-    setPosition(region)
-    await chargerAnnonces(location.coords.latitude, location.coords.longitude)
+    await chargerAnnonces(sportFiltre)
     setLoading(false)
-    return true
   }
 
-  // ─── Charger les annonces dans le rayon ────────────────────
-  const chargerAnnonces = async (lat: number, lng: number) => {
+  // Les annonces n'ont pas (encore) de coordonnées : on charge les plus récentes
+  // et on les affiche en liste. Les marqueurs ne sont posés que si une annonce
+  // possède réellement latitude/longitude.
+  const chargerAnnonces = async (sport: string | null) => {
     setError(null)
 
-    // Calcule les bornes du rayon en degrés
-    const delta = rayon / 111  // 1 degré ≈ 111 km
-
-    let requete = supabase
+    let req = supabase
       .from('annonces')
-      .select('id, titre, sport, niveau, ville, description, places, latitude, longitude, user_id')
-      .not('latitude', 'is', null)
-      .not('longitude', 'is', null)
-      .gte('latitude',  lat - delta)
-      .lte('latitude',  lat + delta)
-      .gte('longitude', lng - delta)
-      .lte('longitude', lng + delta)
+      .select('id, titre, sport, niveau, ville, description, places, user_id, latitude, longitude')
+      .order('created_at', { ascending: false })
+      .limit(60)
 
-    // Filtre par sport si sélectionné
-    if (sportFiltre !== null) {
-      requete = requete.eq('sport', sportFiltre)
+    if (sport) req = req.eq('sport', sport)
+
+    const { data, error: reqError } = await req
+    if (reqError) {
+      setError(reqError.message)
+      return
     }
-
-    const { data, error } = await requete
-
-    if (error) {
-      setError(error.message)
-      return false
-    }
-
-    if (data !== null) {
-      setAnnonces(data)
-    }
-
-    return true
+    setAnnonces((data ?? []) as MapAnnonce[])
   }
 
-  // ─── Changer le rayon de recherche ─────────────────────────
   const changerRayon = async (nouveauRayon: number) => {
     setRayon(nouveauRayon)
-    if (position !== null) {
-      await chargerAnnonces(position.latitude, position.longitude)
-    }
   }
 
-  // ─── Filtrer par sport ──────────────────────────────────────
   const filtrerParSport = async (sport: string | null) => {
     setSportFiltre(sport)
-    if (position !== null) {
-      await chargerAnnonces(position.latitude, position.longitude)
-    }
+    await chargerAnnonces(sport)
+  }
+
+  const retry = async () => {
+    setLocationDenied(false)
+    await init()
   }
 
   return {
@@ -124,11 +112,12 @@ export function useMap() {
     rayon,
     loading,
     error,
+    locationDenied,
     annonceSelectee,
     sportFiltre,
     setAnnonceSelectee,
     changerRayon,
     filtrerParSport,
-    chargerAnnonces,
+    retry,
   }
 }

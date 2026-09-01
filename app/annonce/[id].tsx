@@ -1,169 +1,357 @@
-import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
-import { IconSymbol } from '@/components/ui/icon-symbol'
-import { MapPreview } from '@/components/ui/MapPreview'
-import { Tag } from '@/components/ui/Tag'
-import { getSportIcon } from '@/constants/sportIcons'
-import { Radius, Spacing } from '@/constants/theme'
-import { useAnnonceConversation } from '@/hooks/useAnnonceConversation'
-import { useAnnonceDetail } from '@/hooks/useAnnonceDetail'
-import { useAuth } from '@/hooks/useAuth'
-import { useFavoris } from '@/hooks/useFavoris'
-import { useTheme } from '@/hooks/useTheme'
-import { router, useLocalSearchParams } from 'expo-router'
-import { useState } from 'react'
-import { ActivityIndicator, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { MapPreview } from "@/components/ui/MapPreview";
+import { getSportIcon } from "@/constants/sportIcons";
+import { Radius, Spacing } from "@/constants/theme";
+import { useAnnonceConversation } from "@/hooks/useAnnonceConversation";
+import { AnnonceAuthor, useAnnonceDetail } from "@/hooks/useAnnonceDetail";
+import { useAuth } from "@/hooks/useAuth";
+import { useFavoris } from "@/hooks/useFavoris";
+import { useTheme } from "@/hooks/useTheme";
+import { ANNONCE_TYPE_LABELS, timeAgo } from "@/utils/format";
+import { Image } from "expo-image";
+import { router, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Linking,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-const TYPE_LABELS: Record<string, string> = {
-  club_recrute: 'Club qui recrute',
-  equipe_joueurs: 'Équipe cherche joueurs',
-  cherche_club: 'Cherche un club',
-  cherche_equipe: 'Cherche une équipe',
-  partie_ouverte: 'Partie ouverte',
+function authorName(a: AnnonceAuthor | null): string {
+  if (!a) return "Un membre";
+  const full = [a.prenom, a.nom].filter(Boolean).join(" ").trim();
+  return full || "Un membre";
+}
+
+function authorRole(a: AnnonceAuthor | null): string | null {
+  if (!a) return null;
+  if (a.is_club) return "Club";
+  if (a.is_coach) return "Coach";
+  if (a.is_sportif) return "Sportif";
+  return null;
 }
 
 export default function AnnonceDetailScreen() {
-  const { colors } = useTheme()
-  const { id } = useLocalSearchParams<{ id: string }>()
-  const { annonce, loading, error } = useAnnonceDetail(id)
-  const { isFavori, toggleFavori } = useFavoris()
-  const { session } = useAuth()
-  const canContact = !!annonce && !!annonce.user_id && annonce.user_id !== session?.user.id
-  const { sending, sendMessage } = useAnnonceConversation(annonce?.id, canContact ? annonce?.user_id : null)
-  const [draft, setDraft] = useState('')
+  const { colors } = useTheme();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { annonce, author, loading, error } = useAnnonceDetail(id);
+  const { isFavori, toggleFavori } = useFavoris();
+  const { session } = useAuth();
+  const [draft, setDraft] = useState("");
+
+  const isOwner = !!annonce && !!annonce.user_id && annonce.user_id === session?.user.id;
+  const canContact = !!annonce && !!annonce.user_id && !isOwner && !!session;
+
+  const { sending, sendMessage } = useAnnonceConversation(
+    annonce?.id,
+    canContact ? annonce?.user_id : null,
+  );
 
   if (loading) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
-    )
+    );
   }
 
   if (error || !annonce) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <Text style={{ color: colors.textMuted }}>Annonce introuvable</Text>
+        <IconSymbol name="magnifyingglass" size={28} color={colors.textMuted} />
+        <Text style={{ color: colors.textMuted, marginTop: Spacing.sm }}>Cette annonce est introuvable</Text>
         <Button label="Retour" onPress={() => router.back()} variant="outline" style={{ marginTop: Spacing.md }} />
       </View>
-    )
+    );
   }
 
-  const favori = isFavori(annonce.id)
-  const date = new Date(annonce.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  const favori = isFavori(annonce.id);
+  const showNiveau = annonce.niveau && annonce.niveau !== "Tous niveaux acceptés";
+  const eventDate = annonce.date_evenement
+    ? new Date(annonce.date_evenement).toLocaleDateString("fr-FR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      })
+    : null;
+  const photos = annonce.photos?.filter(Boolean) ?? [];
+  const contactFirstName = author?.prenom || authorName(author);
 
   const onSend = async () => {
-    const content = draft
-    setDraft('')
-    const ok = await sendMessage(content)
-    if (!ok) setDraft(content)
-  }
+    const content = draft;
+    setDraft("");
+    const ok = await sendMessage(content);
+    if (!ok) setDraft(content);
+  };
+
+  const facts: { label: string; value: string }[] = [
+    { label: "Sport", value: annonce.sport },
+    ...(showNiveau ? [{ label: "Niveau", value: annonce.niveau }] : []),
+    { label: "Ville", value: annonce.ville },
+    ...(annonce.club ? [{ label: "Club", value: annonce.club }] : []),
+    ...(annonce.places != null
+      ? [{ label: "Places", value: `${annonce.places} place${annonce.places > 1 ? "s" : ""}` }]
+      : []),
+    ...(eventDate ? [{ label: "Date", value: eventDate }] : []),
+  ];
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="dark-content" />
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-            <Text style={{ color: colors.text, fontSize: 16 }}>‹ Retour</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => toggleFavori(annonce.id)} hitSlop={8}>
-            <IconSymbol name={favori ? 'heart.fill' : 'heart'} size={22} color={favori ? colors.error : colors.textMuted} />
-          </TouchableOpacity>
-        </View>
+
+      <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <TouchableOpacity onPress={() => router.back()} hitSlop={8} style={styles.topBarBtn}>
+          <IconSymbol name="chevron.left" size={20} color={colors.text} />
+          <Text style={{ color: colors.text, fontSize: 15 }}>Retour</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => toggleFavori(annonce.id)} hitSlop={8}>
+          <IconSymbol
+            name={favori ? "heart.fill" : "heart"}
+            size={22}
+            color={favori ? colors.error : colors.textMuted}
+          />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        {photos.length > 0 && (
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            style={styles.photoStrip}
+          >
+            {photos.map((uri, i) => (
+              <Image key={i} source={{ uri }} style={styles.photo} contentFit="cover" />
+            ))}
+          </ScrollView>
+        )}
 
         <View style={styles.content}>
-          <View style={styles.badgeRow}>
-            <Badge label={TYPE_LABELS[annonce.type] ?? annonce.type} variant="success" />
-            <Text style={[styles.date, { color: colors.textMuted }]}>{date}</Text>
+          <View style={styles.headRow}>
+            <Badge label={ANNONCE_TYPE_LABELS[annonce.type] ?? annonce.type} variant="success" />
+            <Text style={[styles.date, { color: colors.textSubtle }]}>Publié {timeAgo(annonce.created_at)}</Text>
           </View>
 
           <Text style={[styles.title, { color: colors.text }]}>{annonce.titre}</Text>
 
-          <View style={styles.tagsRow}>
-            <Tag
-              icon={getSportIcon(annonce.sport)}
-              label={annonce.sport}
-              color={colors.textMuted}
-              backgroundColor={colors.surfaceAlt}
-              iconSize={13}
-              style={styles.tag}
-            />
-            {annonce.niveau && (
-              <Tag
-                icon="chart.bar.fill"
-                label={annonce.niveau}
-                color={colors.textMuted}
-                backgroundColor={colors.surfaceAlt}
-                iconSize={13}
-                style={styles.tag}
-              />
-            )}
-            {annonce.places != null && (
-              <Tag
-                icon="person.fill"
-                label={`${annonce.places} place${annonce.places > 1 ? 's' : ''} restante${annonce.places > 1 ? 's' : ''}`}
-                color={colors.textMuted}
-                backgroundColor={colors.surfaceAlt}
-                iconSize={13}
-                style={styles.tag}
-              />
-            )}
+          <View style={styles.sportLine}>
+            <View style={[styles.sportIcon, { backgroundColor: colors.primaryLight }]}>
+              <IconSymbol name={getSportIcon(annonce.sport)} size={16} color={colors.primaryDark} />
+            </View>
+            <Text style={[styles.sportText, { color: colors.textMuted }]}>
+              {annonce.sport} · {annonce.ville}
+            </Text>
           </View>
 
+          {/* Faits */}
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            {facts.map((f, i) => (
+              <View
+                key={f.label}
+                style={[
+                  styles.factRow,
+                  i < facts.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border },
+                ]}
+              >
+                <Text style={[styles.factLabel, { color: colors.textMuted }]}>{f.label}</Text>
+                <Text style={[styles.factValue, { color: colors.text }]}>{f.value}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* Description */}
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Description</Text>
           <Text style={[styles.description, { color: colors.textMuted }]}>{annonce.description}</Text>
 
+          {/* Lieu */}
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Lieu</Text>
           <MapPreview ville={annonce.ville} club={annonce.club} />
 
-          {canContact && (
-            <View style={styles.chatInputRow}>
-              <TextInput
-                value={draft}
-                onChangeText={setDraft}
-                placeholder="Écrire un message au créateur de l'annonce…"
-                placeholderTextColor={colors.textSubtle}
-                style={[styles.chatInput, { color: colors.text, backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}
-                multiline
-              />
-              <TouchableOpacity
-                onPress={onSend}
-                disabled={sending || !draft.trim()}
-                style={[styles.chatSendButton, { backgroundColor: colors.primary, opacity: sending || !draft.trim() ? 0.5 : 1 }]}
-              >
-                <Text style={styles.chatSendLabel}>Envoyer</Text>
-              </TouchableOpacity>
+          {/* Auteur */}
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Publié par</Text>
+          <View style={[styles.authorCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Avatar uri={author?.avatar_url} name={authorName(author)} size={48} />
+            <View style={{ flex: 1 }}>
+              <View style={styles.authorNameRow}>
+                <Text style={[styles.authorName, { color: colors.text }]} numberOfLines={1}>
+                  {authorName(author)}
+                </Text>
+                {authorRole(author) && (
+                  <View style={[styles.rolePill, { backgroundColor: colors.primaryLight }]}>
+                    <Text style={[styles.rolePillText, { color: colors.primaryDark }]}>{authorRole(author)}</Text>
+                  </View>
+                )}
+              </View>
+              {author?.bio ? (
+                <Text style={[styles.authorBio, { color: colors.textMuted }]} numberOfLines={2}>
+                  {author.bio}
+                </Text>
+              ) : (
+                <Text style={[styles.authorBio, { color: colors.textSubtle }]}>Membre de LeBonSport</Text>
+              )}
             </View>
-          )}
+          </View>
+
+          {/* Zone de contact */}
+          {isOwner ? (
+            <View style={[styles.ownerBox, { backgroundColor: colors.primaryLight }]}>
+              <Text style={[styles.ownerText, { color: colors.primaryDark }]}>
+                {"C'est votre annonce."}
+              </Text>
+              <Button
+                label="Gérer mes annonces"
+                variant="outline"
+                size="sm"
+                onPress={() => router.push("/(tabs)/mes-annonces")}
+                style={{ marginTop: Spacing.sm }}
+              />
+            </View>
+          ) : !session ? (
+            <View style={[styles.ownerBox, { backgroundColor: colors.surfaceAlt }]}>
+              <Text style={[styles.ownerText, { color: colors.textMuted }]}>
+                Connectez-vous pour contacter {contactFirstName}.
+              </Text>
+              <Button
+                label="Se connecter"
+                size="sm"
+                onPress={() => router.push("/(auth)/login")}
+                style={{ marginTop: Spacing.sm }}
+              />
+            </View>
+          ) : canContact ? (
+            <>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Contacter {contactFirstName}</Text>
+
+              {annonce.telephone && (
+                <TouchableOpacity
+                  style={[styles.phoneBtn, { borderColor: colors.border }]}
+                  onPress={() => Linking.openURL(`tel:${annonce.telephone}`)}
+                  activeOpacity={0.8}
+                >
+                  <IconSymbol name="bubble.left.fill" size={16} color={colors.primary} />
+                  <Text style={[styles.phoneText, { color: colors.text }]}>{annonce.telephone}</Text>
+                </TouchableOpacity>
+              )}
+
+              <View style={styles.chatRow}>
+                <TextInput
+                  value={draft}
+                  onChangeText={setDraft}
+                  placeholder={`Écrivez un message à ${contactFirstName}…`}
+                  placeholderTextColor={colors.textSubtle}
+                  style={[
+                    styles.chatInput,
+                    { color: colors.text, backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                  multiline
+                />
+                <TouchableOpacity
+                  onPress={onSend}
+                  disabled={sending || !draft.trim()}
+                  style={[styles.chatSend, { backgroundColor: colors.primary, opacity: sending || !draft.trim() ? 0.5 : 1 }]}
+                >
+                  <Text style={styles.chatSendLabel}>{sending ? "…" : "Envoyer"}</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={[styles.chatHint, { color: colors.textSubtle }]}>
+                Votre message ouvre une conversation privée dans Messages.
+              </Text>
+            </>
+          ) : null}
         </View>
       </ScrollView>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: Spacing.lg },
+
   topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 56,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 52,
     paddingBottom: Spacing.md,
     paddingHorizontal: Spacing.lg,
     borderBottomWidth: 1,
   },
+  topBarBtn: { flexDirection: "row", alignItems: "center", gap: 2 },
+
+  scroll: { paddingBottom: 48 },
+
+  photoStrip: { maxHeight: 240 },
+  photo: { width: 360, height: 240 },
+
   content: { padding: Spacing.lg },
-  badgeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
+
+  headRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: Spacing.sm },
   date: { fontSize: 12 },
-  title: { fontSize: 24, fontWeight: '800', marginBottom: Spacing.md, lineHeight: 30 },
-  tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: Spacing.lg },
-  tag: { gap: 5, paddingVertical: 6 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', marginBottom: Spacing.sm, marginTop: Spacing.md },
+  title: { fontSize: 23, fontWeight: "800", lineHeight: 29, letterSpacing: -0.4 },
+
+  sportLine: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: Spacing.sm, marginBottom: Spacing.lg },
+  sportIcon: { width: 28, height: 28, borderRadius: 9, alignItems: "center", justifyContent: "center" },
+  sportText: { fontSize: 14, fontWeight: "500" },
+
+  card: { borderRadius: Radius.lg, borderWidth: 1, paddingHorizontal: Spacing.md },
+  factRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12, gap: Spacing.md },
+  factLabel: { fontSize: 13 },
+  factValue: { fontSize: 14, fontWeight: "600", flexShrink: 1, textAlign: "right" },
+
+  sectionTitle: { fontSize: 15, fontWeight: "700", marginTop: Spacing.lg, marginBottom: Spacing.sm },
   description: { fontSize: 15, lineHeight: 22 },
-  chatInputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: Spacing.sm, marginTop: Spacing.lg },
-  chatInput: { flex: 1, borderRadius: Radius.md, borderWidth: 1, paddingHorizontal: Spacing.md, paddingVertical: 16, fontSize: 15, maxHeight: 100 },
-  chatSendButton: { borderRadius: Radius.md, paddingHorizontal: Spacing.lg, paddingVertical: 16 },
-  chatSendLabel: { color: '#fff', fontWeight: '700', fontSize: 15 },
-})
+
+  authorCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    padding: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+  },
+  authorNameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  authorName: { fontSize: 15, fontWeight: "700", flexShrink: 1 },
+  rolePill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: Radius.pill },
+  rolePillText: { fontSize: 11, fontWeight: "700" },
+  authorBio: { fontSize: 13, lineHeight: 18, marginTop: 2 },
+
+  ownerBox: { marginTop: Spacing.lg, padding: Spacing.md, borderRadius: Radius.lg },
+  ownerText: { fontSize: 14, fontWeight: "600" },
+
+  phoneBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 12,
+    marginBottom: Spacing.sm,
+  },
+  phoneText: { fontSize: 15, fontWeight: "600" },
+
+  chatRow: { flexDirection: "row", alignItems: "flex-end", gap: Spacing.sm },
+  chatInput: {
+    flex: 1,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 14,
+    fontSize: 15,
+    maxHeight: 120,
+  },
+  chatSend: { borderRadius: Radius.md, paddingHorizontal: Spacing.lg, paddingVertical: 15 },
+  chatSendLabel: { color: "#fff", fontWeight: "700", fontSize: 15 },
+  chatHint: { fontSize: 12, marginTop: 6 },
+});

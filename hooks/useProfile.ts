@@ -42,13 +42,34 @@ export function useProfile() {
       return false
     }
 
-    // On charge le profil
-    const {data: profileData, error: profileError} = await supabase.from('profiles').select('*').eq('id', user.id).single()
+    // On charge le profil (maybeSingle : pas d'erreur si la ligne n'existe pas encore)
+    let {data: profileData, error: profileError} = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle()
 
     if (profileError) {
       setError(profileError.message)
       setLoading(false)
       return false
+    }
+
+    // Certains parcours (connexion Apple, upsert d'inscription échoué) ne créent
+    // pas la ligne profiles : on la crée à la volée pour que l'écran fonctionne.
+    if (profileData === null) {
+      const { data: created, error: createError } = await supabase
+        .from('profiles')
+        .upsert({ id: user.id }, { onConflict: 'id' })
+        .select('*')
+        .maybeSingle()
+
+      if (createError) {
+        setError(createError.message)
+        setLoading(false)
+        return false
+      }
+      profileData = created
     }
 
     setProfile(profileData)

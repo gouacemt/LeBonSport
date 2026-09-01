@@ -10,14 +10,15 @@ import { useRequireAuth } from '@/hooks/useRequireAuth'
 const { width } = Dimensions.get('window')
 const isWeb = Platform.OS === 'web'
 
+// Aligné sur les tokens de constants/theme.ts pour rester cohérent avec le reste de l'app.
 const GREEN       = '#16A06A'
-const GREEN_LIGHT = '#F0FBF5'
+const GREEN_LIGHT = '#E8F5F0'
 const GREEN_BORDER= '#16A06A'
 const BORDER      = '#E5E7EB'
-const TEXT        = '#111827'
+const TEXT        = '#0F1F17'
 const TEXT_MUTED  = '#9CA3AF'
 const TEXT_SUB    = '#6B7280'
-const BG          = '#F3F4F6'
+const BG          = '#F8FAF9'
 const WHITE       = '#FFFFFF'
 
 const TYPES = [
@@ -86,21 +87,24 @@ export default function CreerAnnonce() {
   const [places, setPlaces]       = useState('')
   const [telephone, setTelephone] = useState('')
   const [loading, setLoading]     = useState(false)
+  const [error, setError]         = useState<string | null>(null)
 
   const canSubmit = type && sport && titre.trim() && description.trim() && ville.trim()
 
   const handleSubmit = async () => {
     if (!canSubmit || loading) return
     setLoading(true)
+    setError(null)
 
     const { data: userData } = await supabase.auth.getUser()
     const user = userData.user
     if (!user) {
       setLoading(false)
+      setError('Votre session a expiré. Reconnectez-vous pour publier.')
       return
     }
 
-    const { error } = await supabase.from('annonces').insert({
+    const { error: insertError } = await supabase.from('annonces').insert({
       user_id: user.id,
       type, sport, niveau, titre, description, ville,
       club: club || null,
@@ -108,8 +112,11 @@ export default function CreerAnnonce() {
       telephone: telephone || null,
     })
     setLoading(false)
-    if (error) { console.error(error); return }
-    router.push('/(tabs)/explore')
+    if (insertError) {
+      setError("La publication a échoué. Vérifiez votre connexion et réessayez.")
+      return
+    }
+    router.replace('/(tabs)/mes-annonces')
   }
 
   if (sessionLoading || !session) {
@@ -127,7 +134,7 @@ export default function CreerAnnonce() {
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
             <Text style={styles.backArrow}>←</Text>
-            <Text style={styles.backText}>Retour aux annonces</Text>
+            <Text style={styles.backText}>Retour</Text>
           </TouchableOpacity>
         </View>
 
@@ -139,10 +146,15 @@ export default function CreerAnnonce() {
         >
           <View style={styles.card}>
             <Text style={styles.title}>Créer une annonce</Text>
+            <Text style={styles.lead}>
+              Décrivez ce que vous cherchez. Les membres intéressés vous contacteront directement.
+            </Text>
+
+            {error && <Text style={styles.errorBox}>{error}</Text>}
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>
-                Type d'annonce <Text style={{ color: GREEN }}>*</Text>
+                {"Type d'annonce "}<Text style={{ color: GREEN }}>*</Text>
               </Text>
               {TYPES.map((t) => {
                 const selected = type === t.id
@@ -174,7 +186,7 @@ export default function CreerAnnonce() {
                   <Dropdown label="Niveau requis" placeholder="Tous niveaux" options={NIVEAUX} value={niveau} onChange={setNiveau} />
                 </View>
 
-                <Text style={styles.label}>Titre de l'annonce <Text style={{ color: GREEN }}>*</Text></Text>
+                <Text style={styles.label}>{"Titre de l'annonce "}<Text style={{ color: GREEN }}>*</Text></Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Ex: Cherche gardien pour équipe de foot du dimanche"
@@ -287,7 +299,21 @@ const styles = StyleSheet.create({
     fontSize: isWeb ? 28 : 24,
     fontWeight: '800',
     color: TEXT,
-    marginBottom: 28,
+    marginBottom: 6,
+  },
+  lead: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: TEXT_SUB,
+    marginBottom: 24,
+  },
+  errorBox: {
+    fontSize: 13,
+    color: '#991B1B',
+    backgroundColor: '#FEE2E2',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 20,
   },
 
   section:      { marginBottom: 8 },

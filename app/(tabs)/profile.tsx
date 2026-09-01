@@ -6,10 +6,12 @@ import { useTheme } from '@/hooks/useTheme'
 import { Avatar } from '@/components/ui/Avatar'
 import { IconSymbol, IconSymbolName } from '@/components/ui/icon-symbol'
 import { Spacing } from '@/constants/theme'
+import Header from '@/components/Header'
 import { getSportIcon } from '@/constants/sportIcons'
+import { LinearGradient } from 'expo-linear-gradient'
 import { router, useFocusEffect } from 'expo-router'
-import { useCallback } from 'react'
-import { ActivityIndicator, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { useCallback, useRef } from 'react'
+import { ActivityIndicator, Animated, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 type MenuItem = {
   icon: IconSymbolName
@@ -25,6 +27,7 @@ export default function ProfileScreen() {
   const { profile, sports, loadProfile, loading, error } = useProfile()
   const { signOut } = useAuth()
   const stats = useDashboardStats(sports.length)
+  const scrollY = useRef(new Animated.Value(0)).current
   useFocusEffect(useCallback(function() {loadProfile()}, []))
 
   const handleSignOut = async () => {
@@ -81,13 +84,19 @@ export default function ProfileScreen() {
   return (
     <View style={[styles.root, { backgroundColor: colors.primary }]}>
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+      <Header scrollY={scrollY} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         bounces={true}
       >
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Mon Profil</Text>
+        <LinearGradient
+          colors={[colors.primary, colors.primaryDark]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <Text style={styles.headerTitle}>Mon profil</Text>
 
           <View style={styles.avatarContainer}>
             <Avatar uri={profile?.avatar_url} name={profile?.prenom || profile?.nom} size={90} />
@@ -129,7 +138,7 @@ export default function ProfileScreen() {
           {stats.memberSince && (
             <Text style={styles.memberSince}>Membre depuis {stats.memberSince}</Text>
           )}
-        </View>
+        </LinearGradient>
 
         <View style={[styles.menuContainer, { backgroundColor: colors.background }]}>
 
@@ -144,7 +153,7 @@ export default function ProfileScreen() {
             })}
           </View>
 
-          <Text style={[styles.sectionTitle, { color: colors.textSubtle }]}>AUTRES</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textSubtle }]}>PRÉFÉRENCES</Text>
           <View style={[styles.menuCard, { backgroundColor: colors.surface }]}>
             {sectionAutres.map(function(item, index) {
               return renderItem(item, index, sectionAutres.length)
@@ -174,7 +183,7 @@ const styles = StyleSheet.create({
   root:              {flex: 1},
   loadingContainer:  {flex: 1, justifyContent: 'center', alignItems: 'center'},
 
-  header:            {paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 16 : 60, paddingBottom: 32,paddingHorizontal: 24, alignItems: 'center'},
+  header:            {paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 74 : 118, paddingBottom: 32,paddingHorizontal: 24, alignItems: 'center'},
   headerTitle:       {fontSize: 16, fontWeight: '600', color: 'rgba(255,255,255,0.9)', alignSelf: 'flex-start', marginBottom: 20 },
 
   avatarContainer:   {marginBottom: 14 },

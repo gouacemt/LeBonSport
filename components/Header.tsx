@@ -1,9 +1,10 @@
+import { AccountMenu } from "@/components/AccountMenu";
 import { Avatar } from "@/components/ui/Avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { usePathname, useRouter } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   Animated,
   Platform,
@@ -19,18 +20,22 @@ interface HeaderProps {
 
 const NAV_ITEMS = [
   { label: "Accueil", href: "/(tabs)" },
-  { label: "Explorer", href: "/(tabs)/explore" },
-  { label: "Créer", href: "/create-annonce" },
+  { label: "Annonces", href: "/(tabs)/explore" },
+  { label: "Map", href: "/(tabs)/map" },
 ];
 
-const AUTH_NAV_ITEMS = [{ label: "Messages", href: "/(tabs)/messages" }];
+const AUTH_NAV_ITEMS = [
+  { label: "Mes annonces", href: "/(tabs)/mes-annonces" },
+  { label: "Messages", href: "/(tabs)/messages" },
+];
 
 export default function Header({ scrollY }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { colors } = useTheme();
-  const { session, signOut } = useAuth();
+  const { session } = useAuth();
   const { hasUnread } = useUnreadMessages();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const shadowOpacity = scrollY.interpolate({
     inputRange: [0, 120],
@@ -99,7 +104,7 @@ export default function Header({ scrollY }: HeaderProps) {
 
       <View style={styles.right}>
         {session ? (
-          <TouchableOpacity onPress={signOut} activeOpacity={0.8}>
+          <TouchableOpacity onPress={() => setMenuOpen(true)} activeOpacity={0.8}>
             <Avatar name={initial} size={36} />
           </TouchableOpacity>
         ) : (
@@ -112,6 +117,8 @@ export default function Header({ scrollY }: HeaderProps) {
           </TouchableOpacity>
         )}
       </View>
+
+      {menuOpen && <AccountMenu onClose={() => setMenuOpen(false)} />}
     </Animated.View>
   );
 }
