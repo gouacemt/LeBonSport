@@ -30,9 +30,9 @@ Légende : ✅ fait · 🟡 partiel · ⛔ à faire
 | Avis / réputation après rencontre | ⛔   | |
 | Signaler une annonce / un membre | ⛔   | |
 | Bloquer un membre                | ⛔   | |
-| Suppression de compte (RGPD)     | ⛔   | droit à l'effacement à implémenter |
-| Export de données (RGPD)         | ⛔   | |
-| Politique de confidentialité / CGU réelles | 🟡 | pages présentes, contenu à compléter |
+| Suppression de compte (RGPD)     | ✅   | RPC `delete_user()` (purge + auth), confirmation, redirection login |
+| Export de données (RGPD)         | ✅   | export JSON (partage natif / presse-papier web) |
+| Politique de confidentialité / CGU réelles | 🟡 | page confidentialité complétée (responsable, finalités, base légale, droits) ; CGU à rédiger |
 
 ## Qualité / exploitation
 
