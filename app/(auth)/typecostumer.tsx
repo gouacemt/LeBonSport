@@ -47,7 +47,7 @@ export default function TypeProfilScreen() {
               <Text style={styles.cardEmoji}>🏋️</Text>
               <View style={styles.cardTexts}>
                 <Text style={styles.cardLabel}>Coach</Text>
-                <Text style={styles.cardDescription}>Je propose des séances d'entraînement collectives</Text>
+                <Text style={styles.cardDescription}>Je propose des séances d’entraînement collectives</Text>
               </View>
               <Text style={styles.cardArrow}>›</Text>
             </TouchableOpacity>

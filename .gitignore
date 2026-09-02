@@ -41,3 +41,7 @@ app-example
 # generated native folders
 /ios
 /android
+
+# logs Expo locaux
+expo_out.log
+expo_err.log

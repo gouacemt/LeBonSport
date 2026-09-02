@@ -26,7 +26,7 @@ export default function SportsScreen() {
         <Text style={styles.step}>Etape 1 sur 1</Text>
         <Text style={styles.title}>Tes sports préférés</Text>
         <Text style={styles.subtitle}>
-          Sélectionne les sports qui t'intéressent pour personnaliser ton fil d'annonces
+          Sélectionne les sports qui t’intéressent pour personnaliser ton fil d’annonces
         </Text>
       </View>
 

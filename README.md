@@ -1,50 +1,116 @@
-# Welcome to your Expo app 👋
+# LeBonSport
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Application mobile & web qui met en relation les sportifs, les équipes et les clubs :
+publier une annonce, trouver un partenaire ou une équipe, échanger par messagerie,
+se retrouver sur le terrain.
 
-## Get started
+> Projet Expo (React Native + expo-router) adossé à Supabase (Postgres + Auth + Storage + Realtime).
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## Stack
 
-2. Start the app
+| Domaine        | Choix                                                            |
+| -------------- | --------------------------------------------------------------- |
+| Front          | React Native 0.81 / React 19, Expo SDK 54, expo-router 6        |
+| Langage        | TypeScript (strict), typed routes, React Compiler activé       |
+| Back-end       | Supabase — Postgres, Auth (email + OAuth), Storage, Realtime   |
+| État / données | Hooks maison (`hooks/`) au-dessus du client `@supabase/supabase-js` |
+| Tests          | Jest (`jest-expo`), logique pure isolée dans `utils/` / `services/` |
+| CI             | GitHub Actions — lint + typecheck + tests (`.github/workflows/ci.yml`) |
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## Prérequis
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Node 20+
+- Un projet Supabase (URL + clé anon)
+- Expo Go (test rapide) ou un development build
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Configuration
 
-## Get a fresh project
-
-When you're ready, run:
+Créer un fichier `.env` à la racine :
 
 ```bash
-npm run reset-project
+EXPO_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+EXPO_PUBLIC_SUPABASE_KEY=eyJhbGciOi...            # clé "anon" publique
+EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=...              # optionnel (OAuth Google iOS)
+EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=...          # optionnel (OAuth Google Android)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Installation & lancement
 
-## Learn more
+```bash
+npm install
+npm start           # Expo Dev Server (Expo Go)
+npm run web         # version web
+npm run ios         # build natif iOS (nécessite Xcode)
+npm run android     # build natif Android (nécessite Android SDK)
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Base de données
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Les migrations SQL versionnées sont dans [`supabase/migrations/`](supabase/migrations).
+Les appliquer dans l'ordre via le SQL editor Supabase ou la CLI :
 
-## Join the community
+```bash
+supabase db push
+```
 
-Join our community of developers creating universal apps.
+Schéma détaillé (tables, relations, RLS, fonctions) : [`docs/DATABASE.md`](docs/DATABASE.md).
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Scripts
+
+| Commande            | Effet                                  |
+| ------------------- | -------------------------------------- |
+| `npm start`         | Dev server Expo                        |
+| `npm run web`       | Dev server web                         |
+| `npm run lint`      | ESLint (config `eslint-config-expo`)   |
+| `npm test`          | Jest (watch off avec `--ci`)           |
+| `npx tsc --noEmit`  | Vérification de types                  |
+
+## Structure
+
+```
+app/                 écrans (expo-router, file-based)
+  (auth)/            login, register, mot de passe oublié, type de profil
+  (onboarding)/      choix des sports
+  (tabs)/            accueil, explore, map, créer annonce, mes annonces, messages, profil
+  (profile)/         édition profil, favoris, notifications, aide, confidentialité
+  annonce/[id]       détail d'une annonce
+  messages/[id]      fil de conversation
+components/          UI partagée (components/ui/) + Header, AccountMenu, ErrorBoundary
+hooks/               accès données + logique d'écran (un hook par domaine)
+services/            client Supabase + services d'auth (+ tests)
+utils/               logique pure réutilisable et testée (format, validation, grouping…)
+constants/           design tokens (couleurs, spacing, radius), icônes de sport
+context/             ThemeContext
+supabase/migrations/ schéma SQL versionné
+docs/                architecture & schéma BDD
+```
+
+## Tests
+
+La logique métier testable est extraite dans `utils/` et `services/` pour être
+couverte sans rendre de composants :
+
+- `services/authService` — validation email/mot de passe, inscription/connexion
+- `utils/format` — dates relatives
+- `utils/messageGroups` — regroupement des messages + séparateurs de date
+- `utils/annonce` — validation du formulaire d'annonce
+
+```bash
+npm test
+```
+
+## Déploiement
+
+- **Mobile** : `eas build` (config dans [`eas.json`](eas.json)), puis soumission stores / distribution interne.
+- **Web** : `npx expo export --platform web` → dossier `dist/` à héberger (Vercel, Netlify, …).
+
+---
+
+## Feuille de route
+
+Voir [`docs/ROADMAP.md`](docs/ROADMAP.md) pour l'état des fonctionnalités
+(faites / en cours / à faire) et les points identifiés pour la soutenance.

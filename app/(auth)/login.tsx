@@ -110,7 +110,7 @@ export default function LoginScreen() {
             <View style={styles.registerRow}>
               <Text style={styles.registerText}>Pas encore de compte ? </Text>
               <Link href="/typecostumer" style={styles.registerLink}>
-                S'inscrire
+                S’inscrire
               </Link>
             </View>
           </View>

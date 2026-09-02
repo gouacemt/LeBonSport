@@ -45,7 +45,7 @@ export default function ForgotPasswordScreen() {
             ) : (
               <>
                 <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-                  Entre ton email et on t'envoie un lien de réinitialisation.
+                  Entre ton email et on t’envoie un lien de réinitialisation.
                 </Text>
 
                 {error && <Text style={[styles.error, { color: colors.error, backgroundColor: colors.errorBg }]}>{error}</Text>}

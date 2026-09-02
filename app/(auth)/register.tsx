@@ -74,7 +74,7 @@ export default function RegisterScreen() {
             >
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.buttonText}>S'inscrire</Text>
+                : <Text style={styles.buttonText}>S’inscrire</Text>
               }
             </TouchableOpacity>
 

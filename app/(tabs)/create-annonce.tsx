@@ -6,6 +6,7 @@ import {
 import { router } from 'expo-router'
 import { supabase } from '@/services/supabase'
 import { useRequireAuth } from '@/hooks/useRequireAuth'
+import { parsePlaces, validateAnnonceForm } from '@/utils/annonce'
 
 const { width } = Dimensions.get('window')
 const isWeb = Platform.OS === 'web'
@@ -89,7 +90,8 @@ export default function CreerAnnonce() {
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState<string | null>(null)
 
-  const canSubmit = type && sport && titre.trim() && description.trim() && ville.trim()
+  const validation = validateAnnonceForm({ type, sport, titre, description, ville, places })
+  const canSubmit = validation.valid
 
   const handleSubmit = async () => {
     if (!canSubmit || loading) return
@@ -108,7 +110,7 @@ export default function CreerAnnonce() {
       user_id: user.id,
       type, sport, niveau, titre, description, ville,
       club: club || null,
-      places: places ? parseInt(places) : null,
+      places: parsePlaces(places),
       telephone: telephone || null,
     })
     setLoading(false)
