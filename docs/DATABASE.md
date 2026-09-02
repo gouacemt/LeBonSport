@@ -130,3 +130,4 @@ Publication `supabase_realtime` : tables `conversations` et `messages`
 | `0002_messagerie.sql`                | `conversations`, `messages`, RLS, trigger de bump, publication realtime |
 | `0003_lecture_messages.sql`          | colonnes `*_last_read_at`, `mark_conversations_read()`             |
 | `0004_lecture_conversation.sql`      | `mark_conversation_read(conv_id)`                                 |
+| `0005_candidatures.sql`              | `candidatures`, `notifications`, triggers de notification, `mark_notifications_read()`, realtime |

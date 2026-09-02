@@ -46,6 +46,7 @@ export default function MesAnnoncesScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const [annonces, setAnnonces] = useState<MyAnnonce[]>([]);
+  const [pendingByAnnonce, setPendingByAnnonce] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -64,7 +65,24 @@ export default function MesAnnoncesScreen() {
       .select("id, created_at, type, sport, niveau, titre, ville, places")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
-    setAnnonces((data ?? []) as MyAnnonce[]);
+    const list = (data ?? []) as MyAnnonce[];
+    setAnnonces(list);
+
+    if (list.length > 0) {
+      const { data: cands } = await supabase
+        .from("candidatures")
+        .select("annonce_id")
+        .eq("statut", "en_attente")
+        .in("annonce_id", list.map((a) => a.id));
+      const counts: Record<string, number> = {};
+      for (const c of (cands ?? []) as { annonce_id: string }[]) {
+        counts[c.annonce_id] = (counts[c.annonce_id] ?? 0) + 1;
+      }
+      setPendingByAnnonce(counts);
+    } else {
+      setPendingByAnnonce({});
+    }
+
     setLoading(false);
     setRefreshing(false);
   }, []);
@@ -186,6 +204,14 @@ export default function MesAnnoncesScreen() {
                       <Text style={[styles.cardDate, { color: colors.textSubtle }]}>
                         Publiée {timeAgo(a.created_at)}
                       </Text>
+                      {pendingByAnnonce[a.id] > 0 && (
+                        <View style={[styles.candBadge, { backgroundColor: colors.primaryLight }]}>
+                          <IconSymbol name="person.fill" size={12} color={colors.primaryDark} />
+                          <Text style={[styles.candBadgeText, { color: colors.primaryDark }]}>
+                            {pendingByAnnonce[a.id]} candidature{pendingByAnnonce[a.id] > 1 ? "s" : ""} en attente
+                          </Text>
+                        </View>
+                      )}
                     </View>
                     <TouchableOpacity
                       style={styles.deleteBtn}
@@ -235,5 +261,16 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 15, fontWeight: "700" },
   cardMeta: { fontSize: 12 },
   cardDate: { fontSize: 11, marginTop: 2 },
+  candBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.pill,
+    marginTop: 4,
+  },
+  candBadgeText: { fontSize: 11, fontWeight: "700" },
   deleteBtn: { position: "absolute", top: Spacing.md, right: Spacing.md, padding: 4 },
 });

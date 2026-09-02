@@ -6,8 +6,10 @@ import { MapPreview } from "@/components/ui/MapPreview";
 import { getSportIcon } from "@/constants/sportIcons";
 import { Radius, Spacing } from "@/constants/theme";
 import { useAnnonceConversation } from "@/hooks/useAnnonceConversation";
+import { useAnnonceCandidatures } from "@/hooks/useAnnonceCandidatures";
 import { AnnonceAuthor, useAnnonceDetail } from "@/hooks/useAnnonceDetail";
 import { useAuth } from "@/hooks/useAuth";
+import { useCandidature } from "@/hooks/useCandidature";
 import { useFavoris } from "@/hooks/useFavoris";
 import { useTheme } from "@/hooks/useTheme";
 import { ANNONCE_TYPE_LABELS, timeAgo } from "@/utils/format";
@@ -47,6 +49,7 @@ export default function AnnonceDetailScreen() {
   const { isFavori, toggleFavori } = useFavoris();
   const { session } = useAuth();
   const [draft, setDraft] = useState("");
+  const [coverLetter, setCoverLetter] = useState("");
 
   const isOwner = !!annonce && !!annonce.user_id && annonce.user_id === session?.user.id;
   const canContact = !!annonce && !!annonce.user_id && !isOwner && !!session;
@@ -55,6 +58,9 @@ export default function AnnonceDetailScreen() {
     annonce?.id,
     canContact ? annonce?.user_id : null,
   );
+
+  const candidature = useCandidature(annonce?.id, canContact);
+  const received = useAnnonceCandidatures(isOwner ? annonce?.id : undefined);
 
   if (loading) {
     return (
@@ -204,18 +210,98 @@ export default function AnnonceDetailScreen() {
 
           {/* Zone de contact */}
           {isOwner ? (
-            <View style={[styles.ownerBox, { backgroundColor: colors.primaryLight }]}>
-              <Text style={[styles.ownerText, { color: colors.primaryDark }]}>
-                {"C'est votre annonce."}
+            <>
+              <View style={[styles.ownerBox, { backgroundColor: colors.primaryLight }]}>
+                <Text style={[styles.ownerText, { color: colors.primaryDark }]}>
+                  {"C'est votre annonce."}
+                </Text>
+                <Button
+                  label="Gérer mes annonces"
+                  variant="outline"
+                  size="sm"
+                  onPress={() => router.push("/(tabs)/mes-annonces")}
+                  style={{ marginTop: Spacing.sm }}
+                />
+              </View>
+
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Candidatures{received.candidatures.length > 0 ? ` (${received.candidatures.length})` : ""}
               </Text>
-              <Button
-                label="Gérer mes annonces"
-                variant="outline"
-                size="sm"
-                onPress={() => router.push("/(tabs)/mes-annonces")}
-                style={{ marginTop: Spacing.sm }}
-              />
-            </View>
+              {received.loading ? (
+                <ActivityIndicator color={colors.primary} style={{ alignSelf: "flex-start" }} />
+              ) : received.candidatures.length === 0 ? (
+                <Text style={[styles.chatHint, { color: colors.textSubtle }]}>
+                  Personne n&apos;a encore répondu à cette annonce.
+                </Text>
+              ) : (
+                received.candidatures.map((c) => (
+                  <View
+                    key={c.id}
+                    style={[styles.candCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  >
+                    <View style={styles.candHead}>
+                      <Avatar
+                        uri={c.candidat?.avatar_url}
+                        name={[c.candidat?.prenom, c.candidat?.nom].filter(Boolean).join(" ") || "Membre"}
+                        size={36}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.candName, { color: colors.text }]} numberOfLines={1}>
+                          {[c.candidat?.prenom, c.candidat?.nom].filter(Boolean).join(" ") || "Membre"}
+                        </Text>
+                        {!!c.candidat?.niveau && (
+                          <Text style={[styles.candMeta, { color: colors.textMuted }]}>{c.candidat.niveau}</Text>
+                        )}
+                      </View>
+                      {c.statut !== "en_attente" && (
+                        <View
+                          style={[
+                            styles.statutPill,
+                            {
+                              backgroundColor:
+                                c.statut === "acceptee" ? colors.primaryLight : colors.surfaceAlt,
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.statutPillText,
+                              { color: c.statut === "acceptee" ? colors.primaryDark : colors.textMuted },
+                            ]}
+                          >
+                            {c.statut === "acceptee" ? "Acceptée" : "Refusée"}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {!!c.message && (
+                      <Text style={[styles.candMessage, { color: colors.textMuted }]}>{c.message}</Text>
+                    )}
+
+                    {c.statut === "en_attente" && (
+                      <View style={styles.candActions}>
+                        <Button
+                          label="Accepter"
+                          size="sm"
+                          onPress={() => received.accepter(c.id)}
+                          loading={received.actingId === c.id}
+                          style={{ flex: 1 }}
+                        />
+                        <Button
+                          label="Refuser"
+                          size="sm"
+                          variant="outline"
+                          onPress={() => received.refuser(c.id)}
+                          disabled={received.actingId === c.id}
+                          style={{ flex: 1 }}
+                        />
+                      </View>
+                    )}
+                  </View>
+                ))
+              )}
+            </>
           ) : !session ? (
             <View style={[styles.ownerBox, { backgroundColor: colors.surfaceAlt }]}>
               <Text style={[styles.ownerText, { color: colors.textMuted }]}>
@@ -230,6 +316,60 @@ export default function AnnonceDetailScreen() {
             </View>
           ) : canContact ? (
             <>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Candidater</Text>
+              {candidature.loading ? null : candidature.mine && candidature.mine.statut === "en_attente" ? (
+                <View style={[styles.candStatusBox, { backgroundColor: colors.primaryLight }]}>
+                  <Text style={[styles.ownerText, { color: colors.primaryDark }]}>
+                    Candidature envoyée — en attente de réponse.
+                  </Text>
+                  <Button
+                    label="Retirer ma candidature"
+                    variant="outline"
+                    size="sm"
+                    onPress={candidature.retirer}
+                    loading={candidature.submitting}
+                    style={{ marginTop: Spacing.sm }}
+                  />
+                </View>
+              ) : candidature.mine && candidature.mine.statut === "acceptee" ? (
+                <View style={[styles.candStatusBox, { backgroundColor: colors.primaryLight }]}>
+                  <Text style={[styles.ownerText, { color: colors.primaryDark }]}>
+                    🎉 Votre candidature a été acceptée. Écrivez à {contactFirstName} pour la suite.
+                  </Text>
+                </View>
+              ) : candidature.mine && candidature.mine.statut === "refusee" ? (
+                <View style={[styles.candStatusBox, { backgroundColor: colors.surfaceAlt }]}>
+                  <Text style={[styles.ownerText, { color: colors.textMuted }]}>
+                    Votre candidature n&apos;a pas été retenue cette fois.
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  <TextInput
+                    value={coverLetter}
+                    onChangeText={setCoverLetter}
+                    placeholder="Un mot pour vous présenter (optionnel)…"
+                    placeholderTextColor={colors.textSubtle}
+                    style={[
+                      styles.chatInput,
+                      { color: colors.text, backgroundColor: colors.surface, borderColor: colors.border, marginBottom: Spacing.sm },
+                    ]}
+                    multiline
+                  />
+                  <Button
+                    label="Envoyer ma candidature"
+                    onPress={async () => {
+                      const ok = await candidature.postuler(coverLetter);
+                      if (ok) setCoverLetter("");
+                    }}
+                    loading={candidature.submitting}
+                  />
+                  {!!candidature.error && (
+                    <Text style={[styles.chatHint, { color: colors.error }]}>{candidature.error}</Text>
+                  )}
+                </>
+              )}
+
               <Text style={[styles.sectionTitle, { color: colors.text }]}>Contacter {contactFirstName}</Text>
 
               {annonce.telephone && (
@@ -327,7 +467,17 @@ const styles = StyleSheet.create({
   authorBio: { fontSize: 13, lineHeight: 18, marginTop: 2 },
 
   ownerBox: { marginTop: Spacing.lg, padding: Spacing.md, borderRadius: Radius.lg },
-  ownerText: { fontSize: 14, fontWeight: "600" },
+  ownerText: { fontSize: 14, fontWeight: "600", lineHeight: 20 },
+
+  candStatusBox: { padding: Spacing.md, borderRadius: Radius.lg },
+  candCard: { borderWidth: 1, borderRadius: Radius.lg, padding: Spacing.md, marginBottom: Spacing.sm, gap: Spacing.sm },
+  candHead: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
+  candName: { fontSize: 14, fontWeight: "700" },
+  candMeta: { fontSize: 12, marginTop: 1 },
+  candMessage: { fontSize: 13, lineHeight: 19 },
+  candActions: { flexDirection: "row", gap: Spacing.sm },
+  statutPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: Radius.pill },
+  statutPillText: { fontSize: 11, fontWeight: "700" },
 
   phoneBtn: {
     flexDirection: "row",

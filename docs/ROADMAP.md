@@ -17,8 +17,8 @@ Légende : ✅ fait · 🟡 partiel · ⛔ à faire
 | Favoris                                    | ✅   | |
 | Carte                                      | 🟡   | web = iframe ; pas de coordonnées réelles sur les annonces |
 | Messagerie temps réel                      | ✅   | optimiste, accusés de lecture, non-lus par conversation, recherche |
-| Candidater / rejoindre une annonce         | ⛔   | tout passe par le chat ; pas de table `candidatures` |
-| Notifications in-app                       | 🟡   | écran de réglages réel ; **feed encore mock** |
+| Candidater / rejoindre une annonce         | ✅   | table `candidatures`, postuler/retirer, accepter/refuser côté annonce |
+| Notifications in-app                       | ✅   | table `notifications` + triggers ; feed temps réel, non-lus |
 | Notifications push                         | ⛔   | `expo-notifications` non intégré |
 | Géolocalisation « près de chez moi »       | ⛔   | `useNearbyAthletes` = données de démo |
 

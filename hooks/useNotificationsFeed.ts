@@ -1,11 +1,85 @@
-import { useMockAsyncData } from './useMockAsyncData'
+import type { IconSymbolName } from '@/components/ui/icon-symbol'
+import { supabase } from '@/services/supabase'
+import type { RealtimeChannel } from '@supabase/supabase-js'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useInstanceId } from './useInstanceId'
 
-const MOCK_NOTIFICATIONS = [
-  { id: 'n1', icon: 'hand.wave.fill' as const, titre: 'Bienvenue sur LeBonSport', texte: 'Complétez votre profil pour de meilleures recommandations.', quand: 'Aujourd\'hui' },
-  { id: 'n2', icon: 'sport.soccer' as const, titre: 'Nouvelle annonce dans votre sport', texte: 'Une partie de football vient d\'être publiée près de chez vous.', quand: 'Hier' },
-  { id: 'n3', icon: 'star.fill' as const, titre: 'Rappel', texte: 'Vous avez une annonce en favoris qui approche de sa date.', quand: 'Il y a 2 jours' },
-]
+export type AppNotification = {
+  id: string
+  type: string
+  title: string
+  body: string | null
+  data: Record<string, any>
+  read_at: string | null
+  created_at: string
+}
+
+export function notificationIcon(type: string): IconSymbolName {
+  switch (type) {
+    case 'candidature_recue':
+      return 'person.fill'
+    case 'candidature_acceptee':
+      return 'checkmark.circle.fill'
+    case 'candidature_refusee':
+      return 'xmark'
+    case 'message':
+      return 'bubble.left.fill'
+    default:
+      return 'bell.fill'
+  }
+}
 
 export function useNotificationsFeed() {
-  return useMockAsyncData(MOCK_NOTIFICATIONS)
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
+  const [loading, setLoading] = useState(true)
+  const instanceId = useInstanceId()
+  const userIdRef = useRef<string | null>(null)
+
+  const load = useCallback(async () => {
+    const { data: userData } = await supabase.auth.getUser()
+    const user = userData.user
+    if (!user) {
+      setLoading(false)
+      return
+    }
+    userIdRef.current = user.id
+    const { data } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50)
+    setNotifications((data ?? []) as AppNotification[])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => {
+    let channel: RealtimeChannel | null = null
+    const setup = async () => {
+      await load()
+      const userId = userIdRef.current
+      if (!userId) return
+      channel = supabase
+        .channel(`notifications-${instanceId}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+          () => load(),
+        )
+        .subscribe()
+    }
+    setup()
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [load, instanceId])
+
+  const markAllRead = useCallback(async () => {
+    setNotifications((prev) => prev.map((n) => (n.read_at ? n : { ...n, read_at: new Date().toISOString() })))
+    await supabase.rpc('mark_notifications_read')
+  }, [])
+
+  const unreadCount = notifications.filter((n) => !n.read_at).length
+
+  return { notifications, loading, unreadCount, markAllRead, reload: load }
 }
