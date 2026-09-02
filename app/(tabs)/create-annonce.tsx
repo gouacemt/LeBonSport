@@ -7,6 +7,7 @@ import { router } from 'expo-router'
 import { supabase } from '@/services/supabase'
 import { useRequireAuth } from '@/hooks/useRequireAuth'
 import { useMediaUpload } from '@/hooks/useMediaUpload'
+import { useDeviceLocation } from '@/hooks/useDeviceLocation'
 import { parsePlaces, validateAnnonceForm } from '@/utils/annonce'
 
 const { width } = Dimensions.get('window')
@@ -91,6 +92,12 @@ export default function CreerAnnonce() {
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState<string | null>(null)
   const photos = useMediaUpload('annonces', 5)
+  const geo = useDeviceLocation()
+
+  const useMyLocation = async () => {
+    const res = await geo.request()
+    if (res?.city && !ville.trim()) setVille(res.city)
+  }
 
   const validation = validateAnnonceForm({ type, sport, titre, description, ville, places })
   const canSubmit = validation.valid
@@ -115,6 +122,8 @@ export default function CreerAnnonce() {
       places: parsePlaces(places),
       telephone: telephone || null,
       photos: photos.urls,
+      lat: geo.coords?.lat ?? null,
+      lng: geo.coords?.lng ?? null,
     })
     setLoading(false)
     if (insertError) {
@@ -223,6 +232,17 @@ export default function CreerAnnonce() {
                     <TextInput style={styles.input} placeholder="Ex: FC Lyon" placeholderTextColor={TEXT_MUTED} value={club} onChangeText={setClub} />
                   </View>
                 </View>
+
+                <TouchableOpacity style={styles.geoBtn} onPress={useMyLocation} disabled={geo.loading} activeOpacity={0.7}>
+                  {geo.loading ? (
+                    <ActivityIndicator size="small" color={GREEN} />
+                  ) : (
+                    <Text style={styles.geoBtnText}>
+                      {geo.coords ? '✓ Position ajoutée' : '📍 Utiliser ma position (pour la carte)'}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+                {!!geo.error && <Text style={styles.errorBox}>{geo.error}</Text>}
 
                 <Text style={styles.label}>Places disponibles</Text>
                 <TextInput
@@ -411,6 +431,13 @@ const styles = StyleSheet.create({
   },
   imageIcon: { fontSize: 28, color: TEXT_MUTED },
   imageText: { fontSize: 14, color: TEXT_MUTED },
+
+  geoBtn: {
+    alignSelf: 'flex-start', marginTop: 4, marginBottom: 8,
+    paddingVertical: 10, paddingHorizontal: 14,
+    borderRadius: 10, borderWidth: 1.5, borderColor: BORDER, backgroundColor: WHITE,
+  },
+  geoBtnText: { fontSize: 13, fontWeight: '600', color: TEXT },
 
   thumbRow: { flexDirection: 'row', marginBottom: 10 },
   thumbWrap: { marginRight: 10, position: 'relative' },

@@ -7,12 +7,14 @@ import { SkeletonRow } from "@/components/ui/Skeleton";
 import { NIVEAUX } from "@/constants/options";
 import { getSportIcon } from "@/constants/sportIcons";
 import { Radius, Spacing } from "@/constants/theme";
+import { useDeviceLocation } from "@/hooks/useDeviceLocation";
 import { useFavoris } from "@/hooks/useFavoris";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useSports } from "@/hooks/useSports";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/services/supabase";
 import { timeAgo } from "@/utils/format";
+import { distanceTo, formatDistance, type LatLng } from "@/utils/geo";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -50,6 +52,8 @@ type Annonce = {
   places: number | null;
   telephone: string | null;
   user_id: string | null;
+  lat: number | null;
+  lng: number | null;
 };
 
 type AuthorLite = { prenom: string | null; nom: string | null; avatar_url: string | null };
@@ -81,9 +85,11 @@ type SortKey = (typeof SORTS)[number]["key"];
 function AnnonceRow({
   annonce,
   author,
+  distanceKm,
 }: {
   annonce: Annonce;
   author?: AuthorLite;
+  distanceKm?: number;
 }) {
   const { colors } = useTheme();
   const { isFavori, toggleFavori } = useFavoris();
@@ -119,6 +125,9 @@ function AnnonceRow({
 
         <View style={styles.pillRow}>
           <Pill icon="mappin.and.ellipse" text={annonce.ville} colors={colors} />
+          {distanceKm != null && (
+            <Pill icon="mappin.and.ellipse" text={`à ${formatDistance(distanceKm)}`} colors={colors} />
+          )}
           <Pill text={annonce.sport} colors={colors} />
           {annonce.niveau && annonce.niveau !== "Tous niveaux acceptés" && (
             <Pill icon="chart.bar.fill" text={annonce.niveau} colors={colors} />
@@ -184,7 +193,25 @@ export default function ExploreScreen() {
   const [niveauFilter, setNiveauFilter] = useState("Tous");
   const [onlyPlaces, setOnlyPlaces] = useState(false);
   const [onlyPhone, setOnlyPhone] = useState(false);
+  const [nearMe, setNearMe] = useState(false);
+  const [myPos, setMyPos] = useState<LatLng | null>(null);
   const [sort, setSort] = useState<SortKey>("recent");
+  const geo = useDeviceLocation();
+
+  const NEAR_RADIUS_KM = 30;
+  const toggleNearMe = async () => {
+    if (nearMe) {
+      setNearMe(false);
+      return;
+    }
+    let pos = myPos;
+    if (!pos) {
+      const res = await geo.request();
+      pos = res?.coords ?? null;
+      if (pos) setMyPos(pos);
+    }
+    if (pos) setNearMe(true);
+  };
   const [showFilters, setShowFilters] = useState(false);
   const [showSort, setShowSort] = useState(false);
 
@@ -253,11 +280,21 @@ export default function ExploreScreen() {
     if (niveauFilter !== "Tous") list = list.filter((a) => a.niveau === niveauFilter);
     if (onlyPlaces) list = list.filter((a) => a.places != null && a.places > 0);
     if (onlyPhone) list = list.filter((a) => !!a.telephone);
+
+    if (nearMe && myPos) {
+      const pos = myPos;
+      return list
+        .map((a) => ({ a, km: distanceTo(pos, a) }))
+        .filter((x): x is { a: Annonce; km: number } => x.km != null && x.km <= NEAR_RADIUS_KM)
+        .sort((x, y) => x.km - y.km)
+        .map((x) => x.a);
+    }
+
     if (sort === "places") list.sort((a, b) => (b.places ?? 0) - (a.places ?? 0));
     else if (sort === "alpha") list.sort((a, b) => a.titre.localeCompare(b.titre, "fr"));
     else list.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
     return list;
-  }, [annonces, typeFilter, niveauFilter, onlyPlaces, onlyPhone, sort]);
+  }, [annonces, typeFilter, niveauFilter, onlyPlaces, onlyPhone, sort, nearMe, myPos]);
 
   const activeExtra =
     (typeFilter !== "Tous" ? 1 : 0) +
@@ -469,6 +506,37 @@ export default function ExploreScreen() {
             </View>
           )}
 
+          {/* Autour de moi */}
+          <TouchableOpacity
+            onPress={toggleNearMe}
+            activeOpacity={0.8}
+            style={[
+              styles.nearBtn,
+              {
+                borderColor: nearMe ? colors.primary : colors.border,
+                backgroundColor: nearMe ? colors.primaryLight : colors.surface,
+              },
+            ]}
+          >
+            {geo.loading ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <>
+                <IconSymbol
+                  name="mappin.and.ellipse"
+                  size={15}
+                  color={nearMe ? colors.primaryDark : colors.textMuted}
+                />
+                <Text style={[styles.nearBtnText, { color: nearMe ? colors.primaryDark : colors.textMuted }]}>
+                  {nearMe ? `Autour de moi (${NEAR_RADIUS_KM} km)` : "Autour de moi"}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+          {!!geo.error && !nearMe && (
+            <Text style={[styles.count, { color: colors.error, paddingHorizontal: Spacing.lg }]}>{geo.error}</Text>
+          )}
+
           {/* Barre résultats + tri */}
           <View style={styles.toolbar}>
             <Text style={[styles.count, { color: colors.textMuted }]}>
@@ -540,7 +608,12 @@ export default function ExploreScreen() {
             ) : (
               <View style={{ gap: Spacing.sm }}>
                 {filtered.map((a) => (
-                  <AnnonceRow key={a.id} annonce={a} author={a.user_id ? authors[a.user_id] : undefined} />
+                  <AnnonceRow
+                    key={a.id}
+                    annonce={a}
+                    author={a.user_id ? authors[a.user_id] : undefined}
+                    distanceKm={nearMe && myPos ? distanceTo(myPos, a) ?? undefined : undefined}
+                  />
                 ))}
               </View>
             )}
@@ -636,6 +709,18 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   count: { fontSize: 13, fontWeight: "600" },
+  nearBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.sm,
+    paddingVertical: 10,
+    borderRadius: Radius.pill,
+    borderWidth: 1.5,
+  },
+  nearBtnText: { fontSize: 13, fontWeight: "700" },
   sortBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
   sortBtnText: { fontSize: 13, fontWeight: "600" },
   sortCaret: { transform: [{ rotate: "90deg" }] },

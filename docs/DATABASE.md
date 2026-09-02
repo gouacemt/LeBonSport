@@ -134,3 +134,5 @@ Publication `supabase_realtime` : tables `conversations` et `messages`
 | `0006_suppression_compte.sql`        | `annonces.user_id` en `on delete cascade`, RPC `delete_user()` (RGPD) |
 | `0007_moderation.sql`                | `signalements`, `blocks` + RLS                                    |
 | `0008_profil_public_avis.sql`        | `avis` (note 1-5) + RLS (insert réservé aux membres déjà en conversation) |
+| `0009_clubs.sql`                     | table `clubs` (lecture publique) + jeu de données initial          |
+| `0010_geolocalisation.sql`          | colonnes `lat`/`lng` sur `annonces` et `profiles`, fonction `annonces_near()` |
