@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import {
   ActivityIndicator, View, Text, TextInput, TouchableOpacity, ScrollView,
-  StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, Dimensions,
+  StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, Dimensions, Image,
 } from 'react-native'
 import { router } from 'expo-router'
 import { supabase } from '@/services/supabase'
 import { useRequireAuth } from '@/hooks/useRequireAuth'
+import { useMediaUpload } from '@/hooks/useMediaUpload'
 import { parsePlaces, validateAnnonceForm } from '@/utils/annonce'
 
 const { width } = Dimensions.get('window')
@@ -89,6 +90,7 @@ export default function CreerAnnonce() {
   const [telephone, setTelephone] = useState('')
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState<string | null>(null)
+  const photos = useMediaUpload('annonces', 5)
 
   const validation = validateAnnonceForm({ type, sport, titre, description, ville, places })
   const canSubmit = validation.valid
@@ -112,6 +114,7 @@ export default function CreerAnnonce() {
       club: club || null,
       places: parsePlaces(places),
       telephone: telephone || null,
+      photos: photos.urls,
     })
     setLoading(false)
     if (insertError) {
@@ -241,11 +244,46 @@ export default function CreerAnnonce() {
                   keyboardType="phone-pad"
                 />
 
-                <Text style={styles.label}>Image <Text style={{ color: TEXT_MUTED, fontWeight: '400' }}>(optionnel)</Text></Text>
-                <TouchableOpacity style={styles.imagePicker} activeOpacity={0.7}>
-                  <Text style={styles.imageIcon}>↑</Text>
-                  <Text style={styles.imageText}>Cliquez pour ajouter une image</Text>
-                </TouchableOpacity>
+                <Text style={styles.label}>
+                  Photos <Text style={{ color: TEXT_MUTED, fontWeight: '400' }}>(optionnel, 5 max)</Text>
+                </Text>
+
+                {photos.urls.length > 0 && (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbRow}>
+                    {photos.urls.map((url) => (
+                      <View key={url} style={styles.thumbWrap}>
+                        <Image source={{ uri: url }} style={styles.thumb} />
+                        <TouchableOpacity
+                          style={styles.thumbRemove}
+                          onPress={() => photos.removeUrl(url)}
+                          hitSlop={8}
+                        >
+                          <Text style={styles.thumbRemoveText}>×</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </ScrollView>
+                )}
+
+                {photos.canAddMore && (
+                  <TouchableOpacity
+                    style={styles.imagePicker}
+                    activeOpacity={0.7}
+                    onPress={photos.pickAndUpload}
+                    disabled={photos.uploading}
+                  >
+                    {photos.uploading ? (
+                      <ActivityIndicator color={GREEN} />
+                    ) : (
+                      <>
+                        <Text style={styles.imageIcon}>↑</Text>
+                        <Text style={styles.imageText}>Ajouter une photo</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                )}
+
+                {photos.error && <Text style={styles.errorBox}>{photos.error}</Text>}
 
                 <TouchableOpacity
                   style={[styles.submitBtn, (!canSubmit || loading) && styles.submitBtnDisabled]}
@@ -369,10 +407,20 @@ const styles = StyleSheet.create({
   imagePicker: {
     backgroundColor: WHITE, borderWidth: 1.5, borderColor: BORDER,
     borderStyle: 'dashed', borderRadius: 12,
-    paddingVertical: 36, alignItems: 'center', gap: 8, marginBottom: 4,
+    paddingVertical: 28, alignItems: 'center', gap: 8, marginBottom: 4,
   },
   imageIcon: { fontSize: 28, color: TEXT_MUTED },
   imageText: { fontSize: 14, color: TEXT_MUTED },
+
+  thumbRow: { flexDirection: 'row', marginBottom: 10 },
+  thumbWrap: { marginRight: 10, position: 'relative' },
+  thumb: { width: 88, height: 88, borderRadius: 10, backgroundColor: GREEN_LIGHT },
+  thumbRemove: {
+    position: 'absolute', top: -6, right: -6,
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: '#0F1F17', alignItems: 'center', justifyContent: 'center',
+  },
+  thumbRemoveText: { color: WHITE, fontSize: 15, fontWeight: '700', lineHeight: 16 },
 
   submitBtn:         { backgroundColor: GREEN, borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 24 },
   submitBtnDisabled: { backgroundColor: '#A7D9C3' },
