@@ -131,3 +131,6 @@ Publication `supabase_realtime` : tables `conversations` et `messages`
 | `0003_lecture_messages.sql`          | colonnes `*_last_read_at`, `mark_conversations_read()`             |
 | `0004_lecture_conversation.sql`      | `mark_conversation_read(conv_id)`                                 |
 | `0005_candidatures.sql`              | `candidatures`, `notifications`, triggers de notification, `mark_notifications_read()`, realtime |
+| `0006_suppression_compte.sql`        | `annonces.user_id` en `on delete cascade`, RPC `delete_user()` (RGPD) |
+| `0007_moderation.sql`                | `signalements`, `blocks` + RLS                                    |
+| `0008_profil_public_avis.sql`        | `avis` (note 1-5) + RLS (insert réservé aux membres déjà en conversation) |

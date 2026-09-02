@@ -189,7 +189,12 @@ export default function AnnonceDetailScreen() {
 
           {/* Auteur */}
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Publié par</Text>
-          <View style={[styles.authorCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <TouchableOpacity
+            style={[styles.authorCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            activeOpacity={author?.id ? 0.7 : 1}
+            disabled={!author?.id}
+            onPress={() => author?.id && router.push(`/user/${author.id}` as any)}
+          >
             <Avatar uri={author?.avatar_url} name={authorName(author)} size={48} />
             <View style={{ flex: 1 }}>
               <View style={styles.authorNameRow}>
@@ -210,7 +215,8 @@ export default function AnnonceDetailScreen() {
                 <Text style={[styles.authorBio, { color: colors.textSubtle }]}>Membre de LeBonSport</Text>
               )}
             </View>
-          </View>
+            {author?.id && <IconSymbol name="chevron.right" size={18} color={colors.textSubtle} />}
+          </TouchableOpacity>
 
           {!isOwner && !!session && !!annonce.user_id && (
             <View style={styles.modRow}>

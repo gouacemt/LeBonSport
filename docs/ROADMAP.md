@@ -26,8 +26,8 @@ Légende : ✅ fait · 🟡 partiel · ⛔ à faire
 
 | Fonctionnalité                    | État | Notes |
 | -------------------------------- | ---- | ----- |
-| Profil public d'un autre membre  | ⛔   | pas d'écran `user/[id]` |
-| Avis / réputation après rencontre | ⛔   | |
+| Profil public d'un autre membre  | ✅   | écran `user/[id]` (sports, stats, avis) |
+| Avis / réputation après rencontre | ✅   | table `avis`, note 1-5, réservé aux membres déjà en conversation |
 | Signaler une annonce / un membre | ✅   | table `signalements`, feuille de signalement avec motifs |
 | Bloquer un membre                | ✅   | table `blocks` ; masqué dans explore + messages |
 | Suppression de compte (RGPD)     | ✅   | RPC `delete_user()` (purge + auth), confirmation, redirection login |
