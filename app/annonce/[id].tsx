@@ -11,6 +11,8 @@ import { AnnonceAuthor, useAnnonceDetail } from "@/hooks/useAnnonceDetail";
 import { useAuth } from "@/hooks/useAuth";
 import { useCandidature } from "@/hooks/useCandidature";
 import { useFavoris } from "@/hooks/useFavoris";
+import { useModeration } from "@/hooks/useModeration";
+import { ReportSheet } from "@/components/ReportSheet";
 import { useTheme } from "@/hooks/useTheme";
 import { ANNONCE_TYPE_LABELS, timeAgo } from "@/utils/format";
 import { Image } from "expo-image";
@@ -61,6 +63,8 @@ export default function AnnonceDetailScreen() {
 
   const candidature = useCandidature(annonce?.id, canContact);
   const received = useAnnonceCandidatures(isOwner ? annonce?.id : undefined);
+  const moderation = useModeration();
+  const [reportOpen, setReportOpen] = useState(false);
 
   if (loading) {
     return (
@@ -207,6 +211,30 @@ export default function AnnonceDetailScreen() {
               )}
             </View>
           </View>
+
+          {!isOwner && !!session && !!annonce.user_id && (
+            <View style={styles.modRow}>
+              <TouchableOpacity onPress={() => setReportOpen(true)} hitSlop={6}>
+                <Text style={[styles.modLink, { color: colors.textMuted }]}>Signaler l&apos;annonce</Text>
+              </TouchableOpacity>
+              <Text style={{ color: colors.textSubtle }}>·</Text>
+              <TouchableOpacity
+                onPress={async () => {
+                  if (moderation.isBlocked(annonce.user_id)) {
+                    await moderation.unblock(annonce.user_id!);
+                  } else {
+                    const ok = await moderation.block(annonce.user_id!);
+                    if (ok) router.back();
+                  }
+                }}
+                hitSlop={6}
+              >
+                <Text style={[styles.modLink, { color: colors.error }]}>
+                  {moderation.isBlocked(annonce.user_id) ? "Débloquer ce membre" : "Bloquer ce membre"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Zone de contact */}
           {isOwner ? (
@@ -410,6 +438,15 @@ export default function AnnonceDetailScreen() {
           ) : null}
         </View>
       </ScrollView>
+
+      {!!annonce.id && (
+        <ReportSheet
+          visible={reportOpen}
+          onClose={() => setReportOpen(false)}
+          targetType="annonce"
+          targetId={annonce.id}
+        />
+      )}
     </View>
   );
 }
@@ -504,4 +541,7 @@ const styles = StyleSheet.create({
   chatSend: { borderRadius: Radius.md, paddingHorizontal: Spacing.lg, paddingVertical: 15 },
   chatSendLabel: { color: "#fff", fontWeight: "700", fontSize: 15 },
   chatHint: { fontSize: 12, marginTop: 6 },
+
+  modRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: Spacing.lg },
+  modLink: { fontSize: 13, fontWeight: "600" },
 });

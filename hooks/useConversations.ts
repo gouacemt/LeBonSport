@@ -65,7 +65,13 @@ export function useConversations() {
       return
     }
 
-    const rows = (data ?? []) as unknown as ConversationRow[]
+    const allRows = (data ?? []) as unknown as ConversationRow[]
+
+    // On masque les conversations avec des membres bloqués.
+    const { data: blocksData } = await supabase.from('blocks').select('blocked_id').eq('blocker_id', userId)
+    const blocked = new Set(((blocksData ?? []) as { blocked_id: string }[]).map((b) => b.blocked_id))
+    const rows = allRows.filter((r) => !blocked.has(r.user_a === userId ? r.user_b : r.user_a))
+
     const otherIds = Array.from(new Set(rows.map((r) => (r.user_a === userId ? r.user_b : r.user_a))))
 
     const profilesById = new Map<string, OtherProfile>()

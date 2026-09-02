@@ -28,8 +28,8 @@ Légende : ✅ fait · 🟡 partiel · ⛔ à faire
 | -------------------------------- | ---- | ----- |
 | Profil public d'un autre membre  | ⛔   | pas d'écran `user/[id]` |
 | Avis / réputation après rencontre | ⛔   | |
-| Signaler une annonce / un membre | ⛔   | |
-| Bloquer un membre                | ⛔   | |
+| Signaler une annonce / un membre | ✅   | table `signalements`, feuille de signalement avec motifs |
+| Bloquer un membre                | ✅   | table `blocks` ; masqué dans explore + messages |
 | Suppression de compte (RGPD)     | ✅   | RPC `delete_user()` (purge + auth), confirmation, redirection login |
 | Export de données (RGPD)         | ✅   | export JSON (partage natif / presse-papier web) |
 | Politique de confidentialité / CGU réelles | 🟡 | page confidentialité complétée (responsable, finalités, base légale, droits) ; CGU à rédiger |

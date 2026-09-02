@@ -200,7 +200,18 @@ export default function ExploreScreen() {
       query = query.or(`titre.ilike.%${s}%,description.ilike.%${s}%,ville.ilike.%${s}%`);
     }
     const { data, error } = await query;
-    const results = !error && data ? (data as Annonce[]) : [];
+    let results = !error && data ? (data as Annonce[]) : [];
+
+    // Masque les annonces des membres bloqués.
+    const { data: authData } = await supabase.auth.getUser();
+    if (authData.user) {
+      const { data: blocksData } = await supabase
+        .from("blocks")
+        .select("blocked_id")
+        .eq("blocker_id", authData.user.id);
+      const blocked = new Set((blocksData ?? []).map((b: { blocked_id: string }) => b.blocked_id));
+      if (blocked.size > 0) results = results.filter((a) => !a.user_id || !blocked.has(a.user_id));
+    }
     setAnnonces(results);
 
     const ids = Array.from(new Set(results.map((a) => a.user_id).filter(Boolean))) as string[];
