@@ -136,3 +136,4 @@ Publication `supabase_realtime` : tables `conversations` et `messages`
 | `0008_profil_public_avis.sql`        | `avis` (note 1-5) + RLS (insert réservé aux membres déjà en conversation) |
 | `0009_clubs.sql`                     | table `clubs` (lecture publique) + jeu de données initial          |
 | `0010_geolocalisation.sql`          | colonnes `lat`/`lng` sur `annonces` et `profiles`, fonction `annonces_near()` |
+| `0011_push_tokens.sql`              | table `push_tokens` (jetons Expo) + RLS — voir `docs/PUSH.md`      |
