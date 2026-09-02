@@ -1,13 +1,38 @@
 import { getSportIcon } from '@/constants/sportIcons'
-import { useMockAsyncData } from './useMockAsyncData'
+import { supabase } from '@/services/supabase'
+import { useEffect, useState } from 'react'
 
-const MOCK_CLUBS = [
-  { id: 'c1', nom: 'AS Frontenex Football', sport: 'Football', ville: 'Lyon', membres: 84, icon: getSportIcon('Football') },
-  { id: 'c2', nom: 'Padel Club Confluence', sport: 'Padel', ville: 'Lyon', membres: 42, icon: getSportIcon('Padel') },
-  { id: 'c3', nom: 'Running Team Rhône', sport: 'Running', ville: 'Villeurbanne', membres: 130, icon: getSportIcon('Running') },
-  { id: 'c4', nom: 'Basket Club Part-Dieu', sport: 'Basketball', ville: 'Lyon', membres: 61, icon: getSportIcon('Basketball') },
-]
+export type PopularClub = {
+  id: string
+  nom: string
+  sport: string
+  ville: string
+  membres: number
+  icon: ReturnType<typeof getSportIcon>
+}
 
 export function usePopularClubs() {
-  return useMockAsyncData(MOCK_CLUBS)
+  const [data, setData] = useState<PopularClub[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    supabase
+      .from('clubs')
+      .select('id, nom, sport, ville, membres')
+      .order('membres', { ascending: false })
+      .limit(6)
+      .then(({ data: rows }) => {
+        if (cancelled) return
+        setData(
+          ((rows ?? []) as Omit<PopularClub, 'icon'>[]).map((c) => ({ ...c, icon: getSportIcon(c.sport) })),
+        )
+        setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  return { data, loading }
 }
