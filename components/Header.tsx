@@ -63,6 +63,9 @@ export default function Header({ scrollY }: HeaderProps) {
         onPress={() => router.push("/(tabs)")}
         activeOpacity={0.8}
       >
+        <View style={[styles.logoMark, { backgroundColor: colors.primary }]}>
+          <Text style={styles.logoMarkText}>S</Text>
+        </View>
         <Text style={[styles.logoText, { color: colors.text }]}>
           LeBonSport
         </Text>
@@ -146,6 +149,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+  },
+  logoMark: {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoMarkText: {
+    color: "#fff",
+    fontWeight: "800",
+    fontSize: 16,
   },
   logoText: {
     fontSize: 18,

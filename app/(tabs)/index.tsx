@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import React, { useRef } from "react";
 import {
   Animated,
+  Image,
   Platform,
   StyleSheet,
   Text,
@@ -104,6 +105,11 @@ export default function HomeScreen() {
           style={styles.hero}
         >
           <View style={styles.heroInner}>
+            <Image
+              source={require("@/assets/images/Login_Sportif.png")}
+              style={styles.heroLogo}
+              resizeMode="contain"
+            />
             <Text style={styles.heroTitle}>Le sport, ensemble.</Text>
             <Text style={styles.heroSubtitle}>
               LeBonSport met en relation les sportifs, les équipes et les clubs.
@@ -318,13 +324,15 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 0 },
 
   hero: { paddingTop: isWeb ? 110 : 130, paddingBottom: Spacing.xl + 16, paddingHorizontal: Spacing.lg },
-  heroInner: { width: "100%", maxWidth: CONTENT_MAX, alignSelf: "center" },
+  heroInner: { width: "100%", maxWidth: CONTENT_MAX, alignSelf: "center", alignItems: "center" },
+  heroLogo: { width: isWeb ? 200 : 150, height: isWeb ? 200 : 150, marginBottom: Spacing.md },
   heroTitle: {
     color: "#fff",
     fontSize: isWeb ? 40 : 30,
     fontWeight: "800",
     letterSpacing: -0.6,
     lineHeight: isWeb ? 46 : 36,
+    textAlign: "center",
   },
   heroSubtitle: {
     color: "rgba(255,255,255,0.9)",
@@ -332,8 +340,9 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: Spacing.md,
     maxWidth: 560,
+    textAlign: "center",
   },
-  heroButtons: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm, marginTop: Spacing.lg },
+  heroButtons: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm, marginTop: Spacing.lg, justifyContent: "center" },
   btn: { paddingHorizontal: 20, paddingVertical: 13, borderRadius: Radius.md },
   btnLight: { backgroundColor: "#fff" },
   btnLightText: { fontWeight: "800", fontSize: 14 },
