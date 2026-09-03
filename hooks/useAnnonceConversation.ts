@@ -53,6 +53,18 @@ export function useAnnonceConversation(annonceId: string | undefined, ownerId: s
         .insert({ conversation_id: convId, sender_id: user.id, content: trimmed })
       if (insertError) throw new Error(insertError.message)
 
+      const { data: settings } = await supabase.from('notification_settings').select('push_token, messages').eq('user_id', ownerId).single()
+
+      if (settings?.push_token && settings?.messages === true) {
+        await supabase.functions.invoke('send-notification', {
+          body: {
+            token:   settings.push_token,
+            titre:   'Nouveau message 💬',
+            message: 'Tu as reçu un nouveau message sur LeBonSport pour ton annonce !',
+          }
+        })
+      }
+
       setSending(false)
       return true
     } catch (e: any) {

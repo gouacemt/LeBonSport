@@ -1,5 +1,19 @@
-import { supabase } from '@/services/supabase'
-import { useEffect, useState } from 'react'
+import {supabase} from '@/services/supabase'
+import {useEffect, useState} from 'react'
+import * as Notifications from 'expo-notifications'
+import * as Device from 'expo-device'
+import {Platform} from 'react-native'
+
+// Peremet de configurer comment les notifs s'affichent quand l'application est ouverte
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert:  true,
+    shouldPlaySound:  true,
+    shouldSetBadge:   true,
+    shouldShowBanner: true,  // ← ajoute ça
+    shouldShowList:   true,  // ← ajoute ça
+  }),
+})
 
 type NotificationSettings = {
   messages:     boolean
@@ -18,6 +32,7 @@ export function useNotifications() {
 
   useEffect(function() {
     loadSettings()
+    demanderPermission() 
   }, [])
 
   // ─── Charger les paramètres ─────────────────────────────────
@@ -85,6 +100,55 @@ export function useNotifications() {
     }
 
     return true
+  }
+
+  // ─── Demander la permission + récupérer le token ────────────
+  const demanderPermission = async () => {
+    setError(null)
+
+    // Les notifs push ne fonctionnent que sur un vrai device
+    if (!Device.isDevice) {
+      setError('Les notifications push nécessitent un vrai appareil')
+      return null
+    }
+
+    // Vérifie la permission actuelle
+    const {status: statutActuel} = await Notifications.getPermissionsAsync()
+    let statutFinal = statutActuel
+
+    // Demande la permission si pas encore accordée
+    if (statutActuel !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync()
+      statutFinal = status
+    }
+
+    if (statutFinal !== 'granted') {
+      setError('Permission de notifications refusée')
+      return null
+    }
+
+    // Récupère le token push unique de l'appareil
+    const token = await Notifications.getExpoPushTokenAsync({
+      projectId: process.env.EXPO_PUBLIC_PROJECT_ID,
+    })
+
+    // Sauvegarde le token dans Supabase
+    const reponse = await supabase.auth.getUser()
+    const user = reponse.data.user
+
+    if (user !== null) {
+      await supabase.from('notification_settings').update({push_token: token.data}).eq('user_id', user.id)
+    }
+
+    // Android nécessite un canal de notification
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+      })
+    }
+    return token.data
   }
 
   return {

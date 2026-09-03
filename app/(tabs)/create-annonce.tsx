@@ -130,7 +130,29 @@ export default function CreerAnnonce() {
       setError("La publication a échoué. Vérifiez votre connexion et réessayez.")
       return
     }
-    router.replace('/(tabs)/mes-annonces')
+
+    // Notifie les utilisateurs qui pratiquent ce sport
+    const { data: sportData } = await supabase.from('sports').select('id').eq('nom', sport).single()
+
+    if (!sportData) { router.replace('../(tabs)/mes-annonces'); return }
+
+    const { data: userSports } = await supabase.from('user_sports').select('user_id').eq('sport_id', sportData.id).neq('user_id', user.id) 
+    if (userSports && userSports.length > 0) {
+      for (let i = 0; i < userSports.length; i++) {
+        const { data: settings } = await supabase.from('notification_settings').select('push_token, seances').eq('user_id', userSports[i].user_id).single()
+
+        if (settings?.push_token && settings?.seances === true) {
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              token:   settings.push_token,
+              titre:   'Nouvelle séance disponible ! 🏃',
+              message: `Une nouvelle annonce ${sport} a été publiée à ${ville}`,
+            }
+          })
+        }
+      }
+    }
+    router.replace('../(tabs)/mes-annonces')
   }
 
   if (sessionLoading || !session) {

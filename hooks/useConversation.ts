@@ -130,6 +130,24 @@ export function useConversation(conversationId: string | undefined) {
         return false
       }
 
+      const { data: conv } = await supabase.from('conversations').select('user_a, user_b').eq('id', conversationId).single()
+
+      if (conv) {
+        const destinataireId = conv.user_a === userId ? conv.user_b : conv.user_a
+
+        const { data: settings } = await supabase.from('notification_settings').select('push_token, messages').eq('user_id', destinataireId).single()
+
+        if (settings?.push_token && settings?.messages === true) {
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              token:   settings.push_token,
+              titre:   'Nouveau message 💬',
+              message: 'Tu as reçu un nouveau message sur LeBonSport',
+            }
+          })
+        }
+      }
+
       setMessages((prev) => {
         if (prev.some((m) => m.id === created.id)) return prev.filter((m) => m.clientId !== clientId)
         return prev.map((m) => (m.clientId === clientId ? { ...(created as Message) } : m))

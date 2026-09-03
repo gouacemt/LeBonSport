@@ -55,6 +55,23 @@ export function useAnnonceCandidatures(annonceId: string | undefined) {
     setActingId(null)
     if (!error) {
       setCandidatures((prev) => prev.map((c) => (c.id === id ? { ...c, statut } : c)))
+
+      // Trouve le candidat pour lui envoyer une notif
+      const candidature = candidatures.find(function(c) { return c.id === id })
+
+      if (candidature !== undefined) {
+        const { data: settings } = await supabase.from('notification_settings').select('push_token, candidatures').eq('user_id', candidature.candidat_id).single()
+
+        if (settings?.push_token && settings?.candidatures === true) {
+          await supabase.functions.invoke('send-notification', {
+            body: {
+              token:   settings.push_token,
+              titre:   statut === 'acceptee' ? 'Candidature acceptée ! 🎉' : 'Candidature refusée',
+              message: statut === 'acceptee' ? 'Ta candidature a été acceptée ! Contacte l\'organisateur.' : 'Ta candidature n\'a pas été retenue cette fois.',
+            }
+          })
+        }
+      }
     }
     return !error
   }

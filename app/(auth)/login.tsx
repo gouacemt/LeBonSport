@@ -98,14 +98,14 @@ export default function LoginScreen() {
               />
             )}
 
-            {/* <GoogleSigninButton
+            {/*<GoogleSigninButton
               size={GoogleSigninButton.Size.Wide}
               color={GoogleSigninButton.Color.Dark}
               onPress={handleLoginGoogle}
               disabled={loading}
               style={styles.button}
 										  
-            /> */}
+            />*/}
 
             <View style={styles.registerRow}>
               <Text style={styles.registerText}>Pas encore de compte ? </Text>
