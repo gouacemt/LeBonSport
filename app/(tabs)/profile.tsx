@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { router, useFocusEffect } from 'expo-router'
 import { useCallback, useRef } from 'react'
 import { ActivityIndicator, Animated, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-
+import { usePrenium } from '@/hooks/usePrenium'
 type MenuItem = {
   icon: IconSymbolName
   label: string
@@ -28,6 +28,7 @@ export default function ProfileScreen() {
   const { signOut } = useAuth()
   const stats = useDashboardStats(sports.length)
   const scrollY = useRef(new Animated.Value(0)).current
+  const { isPremium } = usePrenium()
   useFocusEffect(useCallback(function() {loadProfile()}, []))
 
   const handleSignOut = async () => {
@@ -146,6 +147,33 @@ export default function ProfileScreen() {
             <Text style={[styles.error, { color: colors.error, backgroundColor: colors.errorBg }]}>{error}</Text>
           )}
 
+        {/* Bannière premium — affichée uniquement si pas premium */}
+        {!isPremium && (
+          <TouchableOpacity
+            style={styles.premiumBanner}
+            onPress={function() { router.push('/(profile)/prenium' as any) }}
+            activeOpacity={0.85}
+          >
+            <View style={styles.premiumBannerLeft}>
+              <Text style={styles.premiumBannerEmoji}>⭐</Text>
+              <View>
+                <Text style={styles.premiumBannerTitre}>Passer Premium</Text>
+                <Text style={styles.premiumBannerSub}>Badge vérifié · Priorité dans les résultats</Text>
+              </View>
+            </View>
+            <View style={styles.premiumBannerBtn}>
+              <Text style={styles.premiumBannerBtnText}>Voir</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {/* Badge premium si déjà abonné */}
+        {isPremium && (
+          <View style={styles.premiumActif}>
+            <Text style={styles.premiumActifText}>⭐ Abonnement Premium actif</Text>
+          </View>
+        )}
+
           <Text style={[styles.sectionTitle, { color: colors.textSubtle }]}>MON COMPTE</Text>
           <View style={[styles.menuCard, { backgroundColor: colors.surface }]}>
             {sectionCompte.map(function(item, index) {
@@ -209,5 +237,17 @@ const styles = StyleSheet.create({
   menuItemLeft:      {flexDirection: 'row', alignItems: 'center', gap: 12},
   menuItemLabel:     {fontSize: 15},
 
+
+  // Prenium 
+  premiumBanner:        {backgroundColor: '#1a1a2e', borderRadius: 16, padding: 16, marginBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
+  premiumBannerLeft:    {flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1},
+  premiumBannerEmoji:   {fontSize: 24},
+  premiumBannerTitre:   {fontSize: 14, fontWeight: 'bold', color: '#FFD700'},
+  premiumBannerSub:     {fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 2},
+  premiumBannerBtn:     {backgroundColor: '#FFD700', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8},
+  premiumBannerBtnText: {color: '#1a1a2e', fontWeight: 'bold', fontSize: 12},
+  premiumActif:         {backgroundColor: 'rgba(255,215,0,0.15)', borderWidth: 1, borderColor: '#FFD700', borderRadius: 16, padding: 14, marginBottom: 16, alignItems: 'center'},
+  premiumActifText:     {color: '#FFD700', fontWeight: '600', fontSize: 14},
+  
   error:             {padding: 10, borderRadius: 8, marginBottom: 16, fontSize: 14},
 })

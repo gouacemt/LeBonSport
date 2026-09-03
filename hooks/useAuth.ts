@@ -1,7 +1,7 @@
 import * as AppleAuthentication from 'expo-apple-authentication'
 import type { Session } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
-// import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin'
+//import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin'
 import { supabase } from '@/services/supabase'
 
 export function useAuth() {
@@ -132,7 +132,7 @@ export function useAuth() {
     }
   }
 
- /* const signIn_Google = async () => {
+  /*const signIn_Google = async () => {
     try {
       setLoading(true)
       setError(null)
@@ -203,5 +203,5 @@ export function useAuth() {
     return true
   }
 
-return { signUp, signIn, signIn_Apple, /*signIn_Google, */signOut, resetPassword, session, sessionLoading, loading, error }
+return { signUp, signIn, signIn_Apple, /*signIn_Google,*/ signOut, resetPassword, session, sessionLoading, loading, error }
 }
