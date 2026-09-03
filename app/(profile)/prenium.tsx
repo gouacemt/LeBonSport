@@ -164,8 +164,7 @@ export default function PremiumScreen() {
               </TouchableOpacity>
 
               <Text style={styles.mentionLegale}>
-                Paiement sécurisé. Résiliable à tout moment.{'\n'}
-                En production, le paiement sera géré via l'App Store ou Google Play.
+                {'Paiement sécurisé. Résiliable à tout moment.\n En production, le paiement sera géré via l\'App Store ou Google Play.'}
               </Text>
             </>
           )}
@@ -179,7 +178,7 @@ export default function PremiumScreen() {
             >
               {processing
                 ? <ActivityIndicator color="#E24B4A" />
-                : <Text style={styles.boutonAnnulerText}>Annuler l'abonnement</Text>
+                : <Text style={styles.boutonAnnulerText}>{'Annuler l\'abonnement'}</Text>
               }
             </TouchableOpacity>
           )}

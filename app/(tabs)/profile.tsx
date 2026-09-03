@@ -29,7 +29,7 @@ export default function ProfileScreen() {
   const stats = useDashboardStats(sports.length)
   const scrollY = useRef(new Animated.Value(0)).current
   const { isPremium } = usePrenium()
-  useFocusEffect(useCallback(function() {loadProfile()}, []))
+  useFocusEffect(useCallback(function() {loadProfile()}, [loadProfile]))
 
   const handleSignOut = async () => {
     await signOut()
