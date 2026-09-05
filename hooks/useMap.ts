@@ -11,8 +11,8 @@ export type MapAnnonce = {
   description: string
   places:      number | null
   user_id:     string | null
-  latitude:    number | null
-  longitude:   number | null
+  lat:         number | null
+  lng:         number | null
 }
 
 export type Region = {
@@ -78,7 +78,7 @@ export function useMap() {
 
     let req = supabase
       .from('annonces')
-      .select('id, titre, sport, niveau, ville, description, places, user_id, latitude, longitude')
+      .select('id, titre, sport, niveau, ville, description, places, user_id, lat, lng')
       .order('created_at', { ascending: false })
       .limit(60)
 

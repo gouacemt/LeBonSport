@@ -1,4 +1,7 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# Remplace .gitignore pour décider ce qui est envoyé au build EAS.
+# Identique au .gitignore SAUF qu'on laisse passer `.env` (retiré de git,
+# mais nécessaire au build pour injecter les variables EXPO_PUBLIC_*).
+# À supprimer le jour où les variables seront gérées via `eas env:create`.
 
 # dependencies
 node_modules/
@@ -30,13 +33,8 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env
+# local env files (on garde .env pour le build, on ignore seulement les variantes locales)
 .env*.local
-
-# Supabase CLI (dossier de travail local)
-supabase/.temp/
-supabase/.branches/
 
 # typescript
 *.tsbuildinfo

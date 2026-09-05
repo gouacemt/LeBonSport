@@ -1,6 +1,6 @@
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import React from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -25,8 +25,21 @@ function MessagesTabIcon({ color }: { color: string }) {
 
 export default function TabLayout() {
   const { colors } = useTheme();
-  const { session } = useAuth();
+  const { session, sessionLoading } = useAuth();
   usePushRegistration(!!session);
+
+  // Porte d'authentification : sans session, on renvoie vers la connexion.
+  // L'accueil et le reste de l'app ne sont visibles qu'une fois connecté.
+  if (sessionLoading) {
+    return (
+      <View style={[styles.gate, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+  if (!session) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   return (
     <Tabs
@@ -86,6 +99,7 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
+  gate: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   unreadDot: {
     position: 'absolute',
     top: -2,

@@ -34,7 +34,7 @@ export default function MapScreen() {
     )
   }
 
-  const located = annonces.filter((a) => a.latitude != null && a.longitude != null)
+  const located = annonces.filter((a) => a.lat != null && a.lng != null)
 
   return (
     <View style={styles.root}>
@@ -51,7 +51,7 @@ export default function MapScreen() {
           return (
             <Marker
               key={a.id}
-              coordinate={{ latitude: a.latitude as number, longitude: a.longitude as number }}
+              coordinate={{ latitude: a.lat as number, longitude: a.lng as number }}
               onPress={() => setAnnonceSelectee(a)}
             >
               <View style={[styles.marker, isSel && styles.markerSelected]}>

@@ -1,10 +1,9 @@
-import { AccountMenu } from "@/components/AccountMenu";
 import { Avatar } from "@/components/ui/Avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { usePathname, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import {
   Animated,
   Platform,
@@ -35,7 +34,6 @@ export default function Header({ scrollY }: HeaderProps) {
   const { colors } = useTheme();
   const { session } = useAuth();
   const { hasUnread } = useUnreadMessages();
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const shadowOpacity = scrollY.interpolate({
     inputRange: [0, 120],
@@ -113,7 +111,7 @@ export default function Header({ scrollY }: HeaderProps) {
       <View style={styles.right}>
         {session ? (
           onProfileScreen ? null : (
-            <TouchableOpacity onPress={() => setMenuOpen(true)} activeOpacity={0.8}>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/profile")} activeOpacity={0.8}>
               <Avatar name={initial} size={36} />
             </TouchableOpacity>
           )
@@ -127,8 +125,6 @@ export default function Header({ scrollY }: HeaderProps) {
           </TouchableOpacity>
         )}
       </View>
-
-      {menuOpen && <AccountMenu onClose={() => setMenuOpen(false)} />}
     </Animated.View>
   );
 }

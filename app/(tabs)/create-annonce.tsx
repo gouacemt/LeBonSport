@@ -91,6 +91,7 @@ export default function CreerAnnonce() {
   const [telephone, setTelephone] = useState('')
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState<string | null>(null)
+  const [showErrors, setShowErrors] = useState(false)
   const photos = useMediaUpload('annonces', 5)
   const geo = useDeviceLocation()
 
@@ -101,9 +102,16 @@ export default function CreerAnnonce() {
 
   const validation = validateAnnonceForm({ type, sport, titre, description, ville, places })
   const canSubmit = validation.valid
+  const errs: Partial<Record<'type' | 'sport' | 'titre' | 'description' | 'ville' | 'places', string>> =
+    showErrors && !validation.valid ? validation.errors : {}
 
   const handleSubmit = async () => {
-    if (!canSubmit || loading) return
+    if (loading) return
+    if (!canSubmit) {
+      // Bouton grisé : on révèle ce qui manque sous chaque champ.
+      setShowErrors(true)
+      return
+    }
     setLoading(true)
     setError(null)
 
@@ -211,6 +219,7 @@ export default function CreerAnnonce() {
                   </TouchableOpacity>
                 )
               })}
+              {errs.type && <Text style={styles.fieldError}>{errs.type}</Text>}
             </View>
 
             {type && (
@@ -221,6 +230,7 @@ export default function CreerAnnonce() {
                   <View style={{ width: 16 }} />
                   <Dropdown label="Niveau requis" placeholder="Tous niveaux" options={NIVEAUX} value={niveau} onChange={setNiveau} />
                 </View>
+                {errs.sport && <Text style={styles.fieldError}>{errs.sport}</Text>}
 
                 <Text style={styles.label}>{"Titre de l'annonce "}<Text style={{ color: GREEN }}>*</Text></Text>
                 <TextInput
@@ -230,6 +240,7 @@ export default function CreerAnnonce() {
                   value={titre}
                   onChangeText={setTitre}
                 />
+                {errs.titre && <Text style={styles.fieldError}>{errs.titre}</Text>}
 
                 <Text style={styles.label}>Description <Text style={{ color: GREEN }}>*</Text></Text>
                 <TextInput
@@ -242,6 +253,7 @@ export default function CreerAnnonce() {
                   numberOfLines={4}
                   textAlignVertical="top"
                 />
+                {errs.description && <Text style={styles.fieldError}>{errs.description}</Text>}
 
                 <View style={styles.row}>
                   <View style={{ flex: 1 }}>
@@ -254,6 +266,7 @@ export default function CreerAnnonce() {
                     <TextInput style={styles.input} placeholder="Ex: FC Lyon" placeholderTextColor={TEXT_MUTED} value={club} onChangeText={setClub} />
                   </View>
                 </View>
+                {errs.ville && <Text style={styles.fieldError}>{errs.ville}</Text>}
 
                 <TouchableOpacity style={styles.geoBtn} onPress={useMyLocation} disabled={geo.loading} activeOpacity={0.7}>
                   {geo.loading ? (
@@ -275,6 +288,7 @@ export default function CreerAnnonce() {
                   onChangeText={setPlaces}
                   keyboardType="numeric"
                 />
+                {errs.places && <Text style={styles.fieldError}>{errs.places}</Text>}
 
                 <Text style={styles.label}>Téléphone de contact <Text style={{ color: TEXT_MUTED, fontWeight: '400' }}>(optionnel)</Text></Text>
                 <TextInput
@@ -474,4 +488,6 @@ const styles = StyleSheet.create({
   submitBtn:         { backgroundColor: GREEN, borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 24 },
   submitBtnDisabled: { backgroundColor: '#A7D9C3' },
   submitText:        { color: WHITE, fontSize: 16, fontWeight: '700' },
+
+  fieldError:        { fontSize: 12, color: '#991B1B', marginTop: 6 },
 })
