@@ -108,6 +108,7 @@ erDiagram
 | `messages`              | participant de la conversation            | `insert` si `sender_id = auth.uid()` et participant |
 | `notification_settings` | soi-même                                 | soi-même                                       |
 | storage bucket `media`  | publique en lecture                       | écriture/màj/suppression = propriétaire du dossier |
+| storage bucket `avatars`| publique en lecture                       | écriture/màj/suppression = propriétaire du dossier |
 
 ## Fonctions & triggers
 
@@ -137,3 +138,4 @@ Publication `supabase_realtime` : tables `conversations` et `messages`
 | `0009_clubs.sql`                     | table `clubs` (lecture publique) + jeu de données initial          |
 | `0010_geolocalisation.sql`          | colonnes `lat`/`lng` sur `annonces` et `profiles`, fonction `annonces_near()` |
 | `0011_push_tokens.sql`              | table `push_tokens` (jetons Expo) + RLS — voir `docs/PUSH.md`      |
+| `0012_avatars_bucket.sql`           | bucket `avatars` + policies storage (photo de profil)              |

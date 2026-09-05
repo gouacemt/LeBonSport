@@ -45,6 +45,11 @@ export default function Header({ scrollY }: HeaderProps) {
 
   const initial = session?.user?.email?.[0]?.toUpperCase() ?? "U";
 
+  // Sur l'écran Profil, la grande carte affiche déjà l'avatar et le nom du
+  // membre : on masque l'avatar de compte du header pour éviter d'afficher
+  // le profil deux fois sur le même écran.
+  const onProfileScreen = pathname === "/(tabs)/profile" || pathname === "/profile";
+
   return (
     <Animated.View
       style={[
@@ -107,9 +112,11 @@ export default function Header({ scrollY }: HeaderProps) {
 
       <View style={styles.right}>
         {session ? (
-          <TouchableOpacity onPress={() => setMenuOpen(true)} activeOpacity={0.8}>
-            <Avatar name={initial} size={36} />
-          </TouchableOpacity>
+          onProfileScreen ? null : (
+            <TouchableOpacity onPress={() => setMenuOpen(true)} activeOpacity={0.8}>
+              <Avatar name={initial} size={36} />
+            </TouchableOpacity>
+          )
         ) : (
           <TouchableOpacity
             style={[styles.loginBtn, { backgroundColor: colors.primary }]}

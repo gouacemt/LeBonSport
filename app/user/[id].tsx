@@ -5,7 +5,7 @@ import { usePublicProfile } from '@/hooks/usePublicProfile'
 import { useTheme } from '@/hooks/useTheme'
 import { timeAgo } from '@/utils/format'
 import { router, useLocalSearchParams } from 'expo-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   ScrollView,
@@ -69,7 +69,18 @@ export default function PublicProfileScreen() {
     }
   }, [myAvis])
 
-  if (loading) {
+  // Consulter sa propre fiche publique ré-affiche les mêmes infos que
+  // l'onglet Profil (avatar, nom, bio, sports) : on redirige vers son
+  // propre profil plutôt que d'afficher le profil en double.
+  const redirected = useRef(false)
+  useEffect(() => {
+    if (isMe && !redirected.current) {
+      redirected.current = true
+      router.replace('/(tabs)/profile')
+    }
+  }, [isMe])
+
+  if (isMe || loading) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />

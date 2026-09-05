@@ -9,7 +9,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StatusBa
 
 export default function EditProfileScreen() {
   const { colors } = useTheme()
-  const { form, loading, saving, error, updateField, saveProfile } = useEditProfile()
+  const { form, loading, saving, error, updateField, saveProfile, avatarUrl, uploadingAvatar, pickAndUploadAvatar } = useEditProfile()
   const { sports, selected, SportChoice, saveSports } = useSports()
 
   const handleSave = async () => {
@@ -54,7 +54,14 @@ export default function EditProfileScreen() {
             {error && <Text style={[styles.error, { color: colors.error, backgroundColor: colors.errorBg }]}>{error}</Text>}
 
             <View style={styles.avatarSection}>
-              <Avatar name={form.prenom || form.nom || '?'} size={90} />
+              <Avatar uri={avatarUrl} name={form.prenom || form.nom || '?'} size={90} />
+              <TouchableOpacity onPress={pickAndUploadAvatar} disabled={uploadingAvatar} style={styles.avatarChangeBtn}>
+                {uploadingAvatar ? (
+                  <ActivityIndicator color={colors.primary} />
+                ) : (
+                  <Text style={[styles.avatarChange, { color: colors.primary }]}>Changer la photo</Text>
+                )}
+              </TouchableOpacity>
             </View>
 
             <Text style={[styles.label, { color: colors.textMuted }]}>Prénom</Text>
@@ -144,6 +151,8 @@ const styles = StyleSheet.create({
   bottomSheet:       {borderTopLeftRadius: 36, borderTopRightRadius: 36, padding: 24, paddingBottom: 48},
 
   avatarSection:     {alignItems: 'center', marginBottom: Spacing.xl},
+  avatarChangeBtn:   {marginTop: 10},
+  avatarChange:      {fontSize: 13, fontWeight: '600'},
 
   label:             {fontSize: 13, fontWeight: '500', marginBottom: 6 },
   input:             {borderWidth: 1, borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 16},
