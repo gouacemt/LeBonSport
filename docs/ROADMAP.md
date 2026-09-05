@@ -19,7 +19,7 @@ Légende : ✅ fait · 🟡 partiel · ⛔ à faire
 | Messagerie temps réel                      | ✅   | optimiste, accusés de lecture, non-lus par conversation, recherche |
 | Candidater / rejoindre une annonce         | ✅   | table `candidatures`, postuler/retirer, accepter/refuser côté annonce |
 | Notifications in-app                       | ✅   | table `notifications` + triggers ; feed temps réel, non-lus |
-| Notifications push                         | 🟡   | client + table `push_tokens` + Edge Function `send-push` prêts ; reste à déployer la fonction + créer le Database Webhook + tester sur device (docs/PUSH.md) |
+| Notifications push                         | 🟡   | jeton dans `notification_settings.push_token` (`useNotifications`) ; envoi via `supabase.functions.invoke('send-notification')` depuis les hooks (messages, candidatures, nouvelle annonce) ; **code source de la fonction `send-notification` à committer** + à déployer |
 | Géolocalisation « près de chez moi »       | ✅   | coords sur les annonces, « Utiliser ma position » à la création, filtre « Autour de moi » (30 km) + distance affichée dans explore |
 | Données de démo (hooks mock)               | ✅   | `usePopularClubs` branché sur une table `clubs` ; hooks mock inutilisés supprimés |
 

@@ -94,6 +94,7 @@ erDiagram
         bool messages
         bool seances
         bool candidatures
+        text push_token "jeton Expo de l'appareil"
     }
 ```
 
@@ -137,5 +138,4 @@ Publication `supabase_realtime` : tables `conversations` et `messages`
 | `0008_profil_public_avis.sql`        | `avis` (note 1-5) + RLS (insert réservé aux membres déjà en conversation) |
 | `0009_clubs.sql`                     | table `clubs` (lecture publique) + jeu de données initial          |
 | `0010_geolocalisation.sql`          | colonnes `lat`/`lng` sur `annonces` et `profiles`, fonction `annonces_near()` |
-| `0011_push_tokens.sql`              | table `push_tokens` (jetons Expo) + RLS — voir `docs/PUSH.md`      |
-| `0012_avatars_bucket.sql`           | bucket `avatars` + policies storage (photo de profil)              |
+| `0012_avatars_bucket.sql`           | bucket `avatars` + policies storage (photo de profil) — déjà présent en base, à ne pas rejouer |

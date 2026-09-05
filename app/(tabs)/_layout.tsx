@@ -5,7 +5,6 @@ import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useAuth } from '@/hooks/useAuth';
-import { usePushRegistration } from '@/hooks/usePushRegistration';
 import { useTheme } from '@/hooks/useTheme';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
@@ -26,7 +25,6 @@ function MessagesTabIcon({ color }: { color: string }) {
 export default function TabLayout() {
   const { colors } = useTheme();
   const { session, sessionLoading } = useAuth();
-  usePushRegistration(!!session);
 
   // Porte d'authentification : sans session, on renvoie vers la connexion.
   // L'accueil et le reste de l'app ne sont visibles qu'une fois connecté.
