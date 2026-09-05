@@ -1,5 +1,5 @@
 import { supabase } from '@/services/supabase'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 type Profile = {
   id: string
@@ -24,11 +24,10 @@ export function useProfile() {
   const [saving, setSaving]         = useState(false)
   const [error, setError]           = useState<string | null>(null)
 
-  useEffect(() => {
-    loadProfile()
-  }, [])
-
-  const loadProfile = async () => {
+  // Mémoïsé : profile.tsx passe loadProfile en dépendance d'un useFocusEffect.
+  // Sans référence stable, l'effet se relance à chaque rendu → boucle de
+  // chargement infinie (l'écran profil reste bloqué sur le spinner).
+  const loadProfile = useCallback(async () => {
     setLoading(true)
     setError(null)
 
@@ -103,7 +102,11 @@ export function useProfile() {
 
     setLoading(false)
     return true
-  }
+  }, [])
+
+  useEffect(() => {
+    loadProfile()
+  }, [loadProfile])
 
   // ─── Sauvegarder les modifications du profil ────────────────
   const saveProfile = async (données: Partial<Profile>) => {
