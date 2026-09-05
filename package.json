@@ -79,6 +79,7 @@
   "private": true,
   "overrides": {
     "ajv": "^8.17.1",
-    "ajv-keywords": "^5.1.0"
+    "ajv-keywords": "^5.1.0",
+    "@eslint/eslintrc": "^3.3.1"
   }
 }
