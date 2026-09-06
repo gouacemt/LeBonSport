@@ -1,4 +1,6 @@
 import Header from '@/components/Header'
+import { IconSymbol } from '@/components/ui/icon-symbol'
+import { getSportIcon } from '@/constants/sportIcons'
 import { useMap } from '@/hooks/useMap'
 import { usePopularClubs } from '@/hooks/usePopularClubs'
 import { router } from 'expo-router'
@@ -9,12 +11,6 @@ import {
 import MapView, { Marker } from 'react-native-maps'
 
 const GREEN = '#16A06A'
-
-const SPORTS_EMOJIS: { [key: string]: string } = {
-  Football: '⚽', Basketball: '🏀', Tennis: '🎾', Running: '🏃', Cyclisme: '🚴',
-  Natation: '🏊', Rugby: '🏉', Volleyball: '🏐', Fitness: '💪', Randonnée: '🥾',
-  'Arts martiaux': '🥋', Yoga: '🧘', Padel: '🏓', Surf: '🏄', Ski: '⛷️',
-}
 
 export default function MapScreen() {
   const {
@@ -55,7 +51,7 @@ export default function MapScreen() {
               onPress={() => setAnnonceSelectee(a)}
             >
               <View style={[styles.marker, isSel && styles.markerSelected]}>
-                <Text style={styles.markerEmoji}>{SPORTS_EMOJIS[a.sport] || '🏃'}</Text>
+                <IconSymbol name={getSportIcon(a.sport)} size={18} color={isSel ? '#fff' : GREEN} />
               </View>
             </Marker>
           )
@@ -85,7 +81,7 @@ export default function MapScreen() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
               {clubs.data.map((club) => (
                 <View key={club.id} style={styles.clubChip}>
-                  <Text style={styles.clubEmoji}>{SPORTS_EMOJIS[club.sport] || '🏅'}</Text>
+                  <IconSymbol name={getSportIcon(club.sport)} size={18} color={GREEN} />
                   <View>
                     <Text style={styles.clubName} numberOfLines={1}>{club.nom}</Text>
                     <Text style={styles.clubMeta}>{club.ville} · {club.membres} m.</Text>
@@ -111,7 +107,7 @@ export default function MapScreen() {
                 onPress={() => router.push(`/annonce/${a.id}` as any)}
               >
                 <View style={styles.cardHead}>
-                  <Text style={styles.emoji}>{SPORTS_EMOJIS[a.sport] || '🏃'}</Text>
+                  <IconSymbol name={getSportIcon(a.sport)} size={18} color={GREEN} />
                   <Text style={styles.cardTitle} numberOfLines={1}>{a.titre}</Text>
                 </View>
                 <Text style={styles.cardMeta} numberOfLines={1}>
@@ -139,10 +135,13 @@ export default function MapScreen() {
             <Text style={styles.detailCloseText}>✕</Text>
           </TouchableOpacity>
           <Text style={styles.detailTitre} numberOfLines={1}>{annonceSelectee.titre}</Text>
-          <Text style={styles.detailSport}>
-            {SPORTS_EMOJIS[annonceSelectee.sport] || '🏃'} {annonceSelectee.sport}
-            {annonceSelectee.niveau ? ` — ${annonceSelectee.niveau}` : ''}
-          </Text>
+          <View style={styles.detailSportRow}>
+            <IconSymbol name={getSportIcon(annonceSelectee.sport)} size={15} color={GREEN} />
+            <Text style={styles.detailSport}>
+              {annonceSelectee.sport}
+              {annonceSelectee.niveau ? ` — ${annonceSelectee.niveau}` : ''}
+            </Text>
+          </View>
           <Text style={styles.detailDescription} numberOfLines={2}>{annonceSelectee.description}</Text>
         </TouchableOpacity>
       )}
@@ -184,7 +183,6 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#F3F4F6', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 8,
     backgroundColor: '#fff', maxWidth: 200,
   },
-  clubEmoji: { fontSize: 18 },
   clubName: { fontSize: 12, fontWeight: '600', color: '#1a1a1a' },
   clubMeta: { fontSize: 10, color: '#9CA3AF' },
 
@@ -192,7 +190,6 @@ const styles = StyleSheet.create({
     width: 210, borderWidth: 1, borderColor: '#F3F4F6', borderRadius: 14, padding: 12, backgroundColor: '#fff', gap: 4,
   },
   cardHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  emoji: { fontSize: 18 },
   cardTitle: { flex: 1, fontSize: 13, fontWeight: '700', color: '#1a1a1a' },
   cardMeta: { fontSize: 11, color: '#6B7280' },
   cardFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 },
@@ -205,7 +202,6 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 4,
   },
   markerSelected: { backgroundColor: GREEN, borderColor: GREEN },
-  markerEmoji: { fontSize: 16 },
 
   detailCard: {
     position: 'absolute', bottom: 190, left: 12, right: 12,
@@ -218,6 +214,7 @@ const styles = StyleSheet.create({
   },
   detailCloseText: { fontSize: 12, color: '#6B7280' },
   detailTitre: { fontSize: 15, fontWeight: 'bold', color: '#1a1a1a', marginBottom: 4, paddingRight: 24 },
-  detailSport: { fontSize: 13, color: GREEN, fontWeight: '500', marginBottom: 6 },
+  detailSportRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
+  detailSport: { fontSize: 13, color: GREEN, fontWeight: '500' },
   detailDescription: { fontSize: 13, color: '#6B7280', lineHeight: 18 },
 })

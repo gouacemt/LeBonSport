@@ -1,4 +1,6 @@
 import Header from '@/components/Header'
+import { IconSymbol } from '@/components/ui/icon-symbol'
+import { getSportIcon } from '@/constants/sportIcons'
 import { useMap } from '@/hooks/useMap'
 import { usePopularClubs } from '@/hooks/usePopularClubs'
 import { useRef } from 'react'
@@ -11,12 +13,6 @@ import {
 // La carte interactive native est dans app/(tabs)/map.tsx.
 
 const GREEN = '#16A06A'
-
-const SPORTS_EMOJIS: { [key: string]: string } = {
-  Football: '⚽', Basketball: '🏀', Tennis: '🎾', Running: '🏃', Cyclisme: '🚴',
-  Natation: '🏊', Rugby: '🏉', Volleyball: '🏐', Fitness: '💪', Randonnée: '🥾',
-  'Arts martiaux': '🥋', Yoga: '🧘', Padel: '🏓', Surf: '🏄', Ski: '⛷️',
-}
 
 export default function MapScreenWeb() {
   const { annonces, position, loading, error, locationDenied, retry } = useMap()
@@ -81,7 +77,7 @@ export default function MapScreenWeb() {
             <View style={styles.grid}>
               {clubs.data.map((club) => (
                 <View key={club.id} style={styles.clubCard}>
-                  <Text style={styles.emoji}>{SPORTS_EMOJIS[club.sport] || '🏅'}</Text>
+                  <IconSymbol name={getSportIcon(club.sport)} size={20} color={GREEN} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.cardTitle} numberOfLines={1}>{club.nom}</Text>
                     <Text style={styles.cardMeta}>{club.ville} · {club.membres} membres</Text>
@@ -105,7 +101,7 @@ export default function MapScreenWeb() {
             {annonces.map((a) => (
               <View key={a.id} style={styles.annonceCard}>
                 <View style={styles.cardHeader}>
-                  <Text style={styles.emoji}>{SPORTS_EMOJIS[a.sport] || '🏃'}</Text>
+                  <IconSymbol name={getSportIcon(a.sport)} size={20} color={GREEN} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.cardTitle} numberOfLines={1}>{a.titre}</Text>
                     <Text style={styles.cardMeta}>{a.sport}{a.niveau ? ` · ${a.niveau}` : ''}</Text>
@@ -163,7 +159,6 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#F3F4F6', borderRadius: 14, padding: 12, backgroundColor: '#fff',
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  emoji: { fontSize: 20 },
   cardTitle: { fontSize: 13, fontWeight: '600', color: '#1a1a1a' },
   cardMeta: { fontSize: 11, color: '#9CA3AF' },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
