@@ -13,6 +13,7 @@ export default function EditProfileScreen() {
   const { sports, selected, SportChoice, saveSports } = useSports()
 
   const handleSave = async () => {
+    console.log('selected avant save:', selected)
     const successProfil = await saveProfile()
     if (!successProfil) return
 
