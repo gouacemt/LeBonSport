@@ -48,7 +48,7 @@ export default function PremiumScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E24B4A" />
+        <ActivityIndicator size="large" color="#16A06A" />
       </View>
     )
   }
@@ -177,7 +177,7 @@ export default function PremiumScreen() {
               activeOpacity={0.8}
             >
               {processing
-                ? <ActivityIndicator color="#E24B4A" />
+                ? <ActivityIndicator color="#16A06A" />
                 : <Text style={styles.boutonAnnulerText}>{'Annuler l\'abonnement'}</Text>
               }
             </TouchableOpacity>
@@ -231,14 +231,14 @@ const styles = StyleSheet.create({
   planPrixActive:       { color: '#FFD700' },
   planPeriode:          { fontSize: 11, color: '#9CA3AF', marginTop: 2 },
   planPeriodeActive:    { color: 'rgba(255,255,255,0.6)' },
-  economieBadge:        { position: 'absolute', top: -10, right: -10, backgroundColor: '#E24B4A', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
+  economieBadge:        { position: 'absolute', top: -10, right: -10, backgroundColor: '#16A06A', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
   economieBadgeText:    { color: '#fff', fontSize: 10, fontWeight: 'bold' },
 
   // Boutons
   boutonPremium:        { backgroundColor: '#FFD700', borderRadius: 14, padding: 18, alignItems: 'center', marginBottom: 12 },
   boutonPremiumText:    { color: '#1a1a2e', fontWeight: 'bold', fontSize: 16 },
-  boutonAnnuler:        { backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#E24B4A', borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 16 },
-  boutonAnnulerText:    { color: '#E24B4A', fontWeight: '600', fontSize: 15 },
+  boutonAnnuler:        { backgroundColor: '#FEE2E2', borderWidth: 1, borderColor: '#16A06A', borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 16 },
+  boutonAnnulerText:    { color: '#16A06A', fontWeight: '600', fontSize: 15 },
   mentionLegale:        { fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: 16 },
 
   // Erreur

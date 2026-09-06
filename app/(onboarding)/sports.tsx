@@ -13,14 +13,14 @@ export default function SportsScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E24B4A" />
+        <ActivityIndicator size="large" color="#16A06A" />
       </View>
     )
   }
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#E24B4A" />
+      <StatusBar barStyle="light-content" backgroundColor="#16A06A" />
 
       <View style={styles.header}>
         <Text style={styles.step}>Etape 1 sur 1</Text>
@@ -104,7 +104,7 @@ export default function SportsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root:             {flex: 1, backgroundColor: '#E24B4A'},
+  root:             {flex: 1, backgroundColor: '#16A06A'},
   loadingContainer: {flex: 1, justifyContent: 'center', alignItems: 'center'},
   header:           {paddingHorizontal: 24, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ?? 40) + 20 : 60, paddingBottom: 32},
   step:             {fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 6},
@@ -118,14 +118,14 @@ const styles = StyleSheet.create({
   grid:             {backgroundColor: '#fff', paddingHorizontal: 20},
   row:              {justifyContent: 'space-between', marginBottom: 10},
   card:             {width: '31%', aspectRatio: 1, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FAFAFA', position: 'relative'},
-  cardSelected:     {borderWidth: 2, borderColor: '#E24B4A', backgroundColor: '#FEE2E2'},
+  cardSelected:     {borderWidth: 2, borderColor: '#16A06A', backgroundColor: '#FEE2E2'},
   emoji:            {fontSize: 28, marginBottom: 6},
   cardText:         {fontSize: 11, color: '#6B7280', textAlign: 'center'},
   cardTextSelected: {color: '#991B1B', fontWeight: '600'},
-  checkmark:        {position: 'absolute', top: 6, right: 6, width: 18, height: 18, borderRadius: 9, backgroundColor: '#E24B4A', alignItems: 'center', justifyContent: 'center'},
+  checkmark:        {position: 'absolute', top: 6, right: 6, width: 18, height: 18, borderRadius: 9, backgroundColor: '#16A06A', alignItems: 'center', justifyContent: 'center'},
   checkmarkText:    {color: '#fff', fontSize: 10, fontWeight: 'bold'},
   footer:           {backgroundColor: '#fff', padding: 20, paddingBottom: 40},
-  button:           {backgroundColor: '#E24B4A', borderRadius: 12, padding: 16, alignItems: 'center', marginBottom: 12},
+  button:           {backgroundColor: '#16A06A', borderRadius: 12, padding: 16, alignItems: 'center', marginBottom: 12},
   buttonText:       {color: '#fff', fontWeight: '600', fontSize: 16},
   skip:             {textAlign: 'center', color: '#9CA3AF', fontSize: 14},
   error:            {color: '#991B1B', backgroundColor: '#FEE2E2', padding: 10, borderRadius: 8, marginBottom: 16, fontSize: 14},
