@@ -36,6 +36,14 @@
     "plugins": [
       "expo-router",
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "LeBonSport utilise ta position pour afficher sur la carte les terrains et les annonces sportives proches de toi et pour pré-remplir le lieu quand tu crées une annonce. Ta position n'est jamais partagée sans ton accord.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
