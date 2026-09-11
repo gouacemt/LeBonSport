@@ -12,7 +12,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.isitech.lebonsport",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "LeBonSport utilise ta position pour afficher les annonces sportives disponibles près de chez toi sur la carte interactive."
       }
     },
     "android": {
