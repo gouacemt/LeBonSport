@@ -164,7 +164,7 @@ export default function PremiumScreen() {
               </TouchableOpacity>
 
               <Text style={styles.mentionLegale}>
-                {'Paiement sécurisé. Résiliable à tout moment.\n En production, le paiement sera géré via l\'App Store ou Google Play.'}
+                {'Paiement sécurisé. Résiliable à tout moment.\n En production, le paiement sera géré via l\'App Store.'}
               </Text>
             </>
           )}

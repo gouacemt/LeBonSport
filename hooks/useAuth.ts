@@ -137,7 +137,6 @@ export function useAuth() {
       setLoading(true)
       setError(null)
 
-      // Vérifie que Google Play Services est disponible (Android)
       await GoogleSignin.hasPlayServices()
 
       // Ouvre la popup Google native
@@ -170,7 +169,7 @@ export function useAuth() {
       } else if (e.code === statusCodes.IN_PROGRESS) {
         setError('Connexion déjà en cours')
       } else if (e.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        setError('Google Play Services non disponible')
+        setError('Services non disponible')
       } else {
         setError('Erreur lors de la connexion Google')
       }
