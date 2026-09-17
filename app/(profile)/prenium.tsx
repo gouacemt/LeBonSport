@@ -1,8 +1,4 @@
-import {
-  View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, StatusBar, Platform,
-  ActivityIndicator, Alert
-} from 'react-native'
+import {View, Text, StyleSheet, ScrollView,TouchableOpacity, StatusBar, Platform, ActivityIndicator, Alert, Linking} from 'react-native'
 import { router } from 'expo-router'
 import { usePrenium } from '@/hooks/usePrenium'
 
@@ -164,7 +160,7 @@ export default function PremiumScreen() {
               </TouchableOpacity>
 
               <Text style={styles.mentionLegale}>
-                {'Paiement sécurisé. Résiliable à tout moment.\n En production, le paiement sera géré via l\'App Store.'}
+                {'Paiement sécurisé. Résiliable à tout moment.\n Abonnement géré via l\'App Store.'}
               </Text>
             </>
           )}
@@ -182,6 +178,12 @@ export default function PremiumScreen() {
               }
             </TouchableOpacity>
           )}
+
+          <TouchableOpacity onPress={() => Linking.openURL('https://north-shell-980.notion.site/Politique-de-confidentialit-LeBonSport-3d4fd76b2ae3801eb80ed1f96e251e79?pvs=143')}>
+            <Text style={styles.lienCGU}>
+              Conditions d'utilisation · Politique de confidentialité
+            </Text>
+          </TouchableOpacity>
 
         </View>
       </ScrollView>
@@ -241,6 +243,7 @@ const styles = StyleSheet.create({
   boutonAnnulerText:    { color: '#16A06A', fontWeight: '600', fontSize: 15 },
   mentionLegale:        { fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: 16 },
 
+  lienCGU: {textAlign: 'center', color: '#9CA3AF', fontSize: 11, marginTop: 8, textDecorationLine: 'underline'},
   // Erreur
   error:                { color: '#991B1B', backgroundColor: '#FEE2E2', padding: 10, borderRadius: 8, marginBottom: 16, fontSize: 14 },
 })
